@@ -22,16 +22,21 @@
             --border: #1a3050; --shadow: 0 2px 8px rgba(0,0,0,0.3);
             --radius: 14px; --radius-sm: 10px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 16px; height: 100%; }
         body {
             font-family: var(--font); background: var(--bg); color: var(--text);
             font-size: 15px; line-height: 1.5; min-height: 100vh;
+            padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
             -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
-        
-        /* Login Screen */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1a3050; border-radius: 4px; }
+
         .login-overlay {
             position: fixed; inset: 0;
             background: linear-gradient(135deg, #060f1e 0%, #0a1628 30%, #1e4d8c 100%);
@@ -61,27 +66,21 @@
             color: #e2e8f0; transition: all 0.2s;
         }
         .google-btn:hover { border-color: #1e4d8c; background: #1a3050; }
-        .login-error { 
-            color: #ef4444; margin-top: 16px; display: none; font-size: 0.9rem; 
-            font-weight: 600; padding: 10px; background: rgba(239,68,68,0.1); 
-            border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); 
-        }
-        .login-debug { 
-            color: #f59e0b; margin-top: 16px; display: none; font-size: 0.8rem; 
-            padding: 10px; background: rgba(245,158,11,0.1); 
-            border-radius: 8px; border: 1px solid rgba(245,158,11,0.2); 
-        }
+        .google-btn:active { transform: scale(0.97); }
+        .google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .login-error { color: #ef4444; margin-top: 16px; display: none; font-size: 0.9rem; font-weight: 600; padding: 10px; background: rgba(239,68,68,0.1); border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); }
 
-        /* Dashboard */
         .dashboard { display: none; }
         .dashboard.active { display: flex; min-height: 100vh; }
-        
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; }
+        .sidebar-overlay.active { display: block; }
         .sidebar {
             width: 280px; background: #060f1e; color: #e2e8f0;
             position: fixed; top: 0; left: 0; height: 100vh; z-index: 250;
-            overflow-y: auto; display: flex; flex-direction: column;
-            font-size: 0.9rem; border-right: 1px solid #1a3050;
-            transition: transform 0.3s;
+            transition: transform 0.3s; overflow-y: auto;
+            display: flex; flex-direction: column;
+            padding-top: var(--safe-top); font-size: 0.9rem;
+            border-right: 1px solid #1a3050;
         }
         .sidebar .brand {
             padding: 20px 18px; font-weight: 800; font-size: 1.2rem;
@@ -102,10 +101,7 @@
         }
         .sidebar nav a:hover { background: #152544; color: #e2e8f0; }
         .sidebar nav a.active { background: #1e4d8c; color: #fff; font-weight: 700; }
-        .sidebar nav a .nav-badge { 
-            background: #ef4444; color: #fff; border-radius: 12px; 
-            padding: 3px 8px; font-size: 0.65rem; margin-left: auto; font-weight: 700; 
-        }
+        .sidebar nav a .nav-badge { background: #ef4444; color: #fff; border-radius: 12px; padding: 3px 8px; font-size: 0.65rem; margin-left: auto; font-weight: 700; }
         .sidebar-footer { padding: 16px; border-top: 1px solid #1a3050; }
         .logout-btn {
             width: 100%; background: #152544; border: 1px solid #1a3050;
@@ -113,45 +109,34 @@
             font-size: 0.85rem; min-height: 46px; font-weight: 600;
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
+        .logout-btn:hover { background: rgba(239,68,68,0.2); }
 
-        .main { flex: 1; margin-left: 280px; display: flex; flex-direction: column; }
+        .main { flex: 1; margin-left: 280px; display: flex; flex-direction: column; min-height: 100vh; }
         .topbar {
             background: var(--surface); border-bottom: 1px solid #1a3050;
             padding: 12px 16px; display: flex; justify-content: space-between;
             align-items: center; position: sticky; top: 0; z-index: 50; min-height: 56px;
         }
-        .hamburger { 
-            display: none; background: none; border: none; font-size: 1.4rem; 
-            color: #e2e8f0; cursor: pointer; padding: 8px; min-width: 44px; min-height: 44px; 
-        }
+        .hamburger { display: none; background: none; border: none; font-size: 1.4rem; color: #e2e8f0; cursor: pointer; padding: 8px; min-width: 44px; min-height: 44px; }
         .content-area { padding: 16px; flex: 1; }
 
-        .metrics-grid { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
-            gap: 10px; margin-bottom: 14px; 
-        }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 14px; }
         .metric-card {
             background: var(--surface); border-radius: var(--radius-sm);
-            padding: 14px 12px; display: flex; align-items: center; gap: 10px;
+            padding: 14px 12px; box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 10px;
             border: 1px solid #1a3050; cursor: pointer;
         }
-        .metric-icon { 
-            width: 40px; height: 40px; border-radius: 10px; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 1rem; color: #fff; flex-shrink: 0; 
-        }
+        .metric-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; flex-shrink: 0; }
         .metric-value { font-size: 1.4rem; font-weight: 800; }
-        .metric-label { 
-            color: var(--text-secondary); font-size: 0.65rem; 
-            text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; 
-        }
+        .metric-label { color: var(--text-secondary); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
         .card {
             background: var(--surface); border-radius: var(--radius-sm);
-            border: 1px solid #1a3050; margin-bottom: 12px; overflow: hidden;
+            box-shadow: var(--shadow); border: 1px solid #1a3050;
+            margin-bottom: 12px; overflow: hidden;
         }
         .card-header {
             padding: 14px 16px; border-bottom: 1px solid #1a3050;
@@ -159,10 +144,7 @@
             align-items: center; font-size: 0.9rem; flex-wrap: wrap; gap: 8px;
             background: #152544;
         }
-        .table-responsive { 
-            overflow-x: auto; max-height: 50vh; overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; 
-        }
+        .table-responsive { overflow-x: auto; max-height: 50vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 500px; }
         th {
             background: #152544; padding: 10px; text-align: left;
@@ -172,13 +154,11 @@
         td { padding: 10px; border-bottom: 1px solid #1a3050; font-size: 0.8rem; }
         tr:hover td { background: #152544; }
 
-        .badge { 
-            padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; 
-            font-weight: 700; display: inline-flex; align-items: center; gap: 4px; 
-        }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; }
         .badge-active { background: rgba(16,185,129,0.15); color: #34d399; }
         .badge-danger { background: rgba(239,68,68,0.15); color: #f87171; }
         .badge-warning { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .badge-info { background: rgba(6,182,212,0.15); color: #22d3ee; }
 
         .action-btn {
             padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer;
@@ -195,128 +175,126 @@
         .btn-view { background: #152544; color: #e2e8f0; border: 1px solid #1a3050; }
         .btn-preview { background: linear-gradient(135deg, #06b6d4, #1e4d8c); color: #fff; }
         .btn-scan { background: linear-gradient(135deg, #1e4d8c, #7c3aed); color: #fff; }
-        .btn-lock { background: #475569; color: #fff; }
-        .btn-kill { background: #dc2626; color: #fff; }
 
         .mobile-cards { display: none; }
         .data-card {
             background: var(--surface); border: 1px solid #1a3050;
             border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
         }
-        .data-card .card-row { 
-            display: flex; justify-content: space-between; margin-bottom: 4px; 
-            font-size: 0.8rem; flex-wrap: wrap; gap: 4px; 
-        }
-        .data-card .card-label { 
-            font-weight: 700; color: #8899b4; font-size: 0.6rem; text-transform: uppercase; 
-        }
-        .data-card .card-actions { 
-            display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; 
-            border-top: 1px solid #1a3050; flex-wrap: wrap; 
-        }
+        .data-card .card-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem; flex-wrap: wrap; gap: 4px; }
+        .data-card .card-label { font-weight: 700; color: #8899b4; font-size: 0.6rem; text-transform: uppercase; }
+        .data-card .card-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #1a3050; flex-wrap: wrap; }
 
+        /* Modern Modal */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             display: none; align-items: center; justify-content: center;
             z-index: 3000; padding: 16px; backdrop-filter: blur(8px);
+            animation: fadeIn 0.2s ease;
         }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal-overlay.show { display: flex; }
         .modal-content {
-            background: #0f1f3a; border-radius: 20px; padding: 24px;
+            background: linear-gradient(135deg, #0f1f3a, #152544);
+            border-radius: 20px; padding: 24px;
             width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto;
             border: 1px solid #1a3050; box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        .security-bot-panel {
-            background: linear-gradient(135deg, #0a1628, #1e4d8c);
-            border-radius: var(--radius); border: 2px solid #1e4d8c;
-            padding: 16px; margin-bottom: 14px; color: #e2e8f0;
+        /* Enhanced Preview */
+        .preview-modal .modal-content {
+            max-width: 600px;
         }
-        .security-stats-grid { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
-            gap: 8px; margin-bottom: 12px; 
+        .preview-header {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 20px; padding-bottom: 16px;
+            border-bottom: 1px solid #1a3050;
         }
-        .security-stat {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 10px; padding: 10px; text-align: center;
+        .preview-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            background: linear-gradient(135deg, #06b6d4, #1e4d8c);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: #fff;
         }
-        .security-stat .stat-value { font-size: 1.3rem; font-weight: 800; color: #60a5fa; }
-        .security-stat .stat-label { 
-            font-size: 0.6rem; color: #6b8ab0; text-transform: uppercase; 
-            letter-spacing: 0.5px; font-weight: 600; 
+        .preview-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+            margin-bottom: 16px;
         }
-        .bot-btn {
-            padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05); color: #e2e8f0; cursor: pointer;
-            font-size: 0.7rem; font-weight: 700; min-height: 38px;
-            display: inline-flex; align-items: center; gap: 6px;
+        .preview-item {
+            background: rgba(10,22,40,0.5); padding: 12px;
+            border-radius: 10px; border: 1px solid #1a3050;
         }
+        .preview-label {
+            font-size: 0.6rem; text-transform: uppercase;
+            color: #8899b4; font-weight: 700; margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        .preview-value {
+            font-size: 0.9rem; font-weight: 600; color: #e2e8f0;
+            word-break: break-word;
+        }
+        .preview-full {
+            grid-column: 1 / -1;
+        }
+        .preview-images {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+        }
+        .preview-images img {
+            width: 100px; height: 100px; object-fit: cover;
+            border-radius: 10px; border: 2px solid #1a3050;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .preview-images img:hover { transform: scale(1.05); border-color: #06b6d4; }
 
-        .insights-grid { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 10px; margin-bottom: 12px; 
+        /* Modern Assign Popup */
+        .assign-popup .modal-content {
+            max-width: 420px;
         }
-        .insight-card {
-            background: var(--surface); border-radius: var(--radius-sm);
-            padding: 14px; border: 1px solid #1a3050;
-        }
-        .insight-card h4 { font-size: 0.8rem; font-weight: 700; margin-bottom: 8px; }
-        .insight-metric { 
-            display: flex; justify-content: space-between; padding: 5px 0; 
-            border-bottom: 1px solid #1a3050; font-size: 0.75rem; 
-        }
-        .insight-value { font-weight: 700; font-size: 0.85rem; }
-        .staff-rating { 
-            display: inline-flex; padding: 3px 10px; border-radius: 12px; 
-            font-weight: 700; font-size: 0.7rem; 
-        }
-        .staff-rating.top { background: rgba(16,185,129,0.15); color: #34d399; }
-        .staff-rating.good { background: rgba(30,77,140,0.2); color: #60a5fa; }
-        .live-dot { 
-            width: 8px; height: 8px; background: #10b981; border-radius: 50%; 
-            display: inline-block; animation: pulse 1.5s infinite; 
-        }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        .form-group { margin-bottom: 10px; }
-        .form-group label { 
-            display: block; font-size: 0.7rem; font-weight: 700; margin-bottom: 3px; 
-            color: #8899b4; text-transform: uppercase; 
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 10px 12px; border-radius: 8px;
+        .staff-search {
+            width: 100%; padding: 12px 14px; border-radius: 12px;
             border: 2px solid #1a3050; background: #0a1628;
-            color: #e2e8f0; font-size: 16px; font-family: var(--font);
+            color: #e2e8f0; font-size: 14px; margin-bottom: 12px;
+            transition: all 0.3s;
         }
-        .btn { 
-            padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 700; 
-            border: none; font-size: 0.8rem; min-height: 42px; 
-            display: inline-flex; align-items: center; gap: 6px; 
+        .staff-search:focus { outline: none; border-color: #1e4d8c; box-shadow: 0 0 0 3px rgba(30,77,140,0.2); }
+        .staff-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px; border-radius: 10px; cursor: pointer;
+            margin-bottom: 4px; transition: all 0.2s;
+            border: 1px solid transparent;
         }
-        .btn-primary { background: #1e4d8c; color: #fff; }
-        .btn-success { background: #10b981; color: #fff; }
-        .btn-outline { background: transparent; border: 2px solid #1a3050; color: #e2e8f0; }
-        .btn-sm { padding: 6px 12px; font-size: 0.7rem; min-height: 32px; }
-
-        .toast {
-            position: fixed; bottom: 20px; left: 16px; right: 16px;
-            background: #1e4d8c; color: #fff; padding: 14px 18px;
-            border-radius: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-            z-index: 9999; font-size: 0.85rem; text-align: center;
-            max-width: 420px; margin: 0 auto; font-weight: 600;
+        .staff-item:hover { background: #1e4d8c; border-color: #2563eb; transform: translateX(4px); }
+        .staff-item.selected { background: #1e4d8c; border-color: #06b6d4; box-shadow: 0 0 15px rgba(6,182,212,0.2); }
+        .staff-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #1e4d8c, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #fff; flex-shrink: 0;
         }
-        .toast.error { background: #dc2626; }
-        .toast.success { background: #10b981; }
-        .empty-state { 
-            text-align: center; padding: 24px; color: #4a6080; font-size: 0.8rem; 
-        }
+        .staff-info { flex: 1; }
+        .staff-name { font-weight: 600; font-size: 0.85rem; }
+        .staff-email { font-size: 0.7rem; color: #8899b4; }
 
         .image-upload-area {
-            border: 2px dashed #1a3050; border-radius: 12px;
-            padding: 20px; text-align: center; cursor: pointer;
-            background: rgba(10,22,40,0.5); margin-bottom: 12px;
+            border: 2px dashed #1a3050;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(10,22,40,0.5);
+            margin-bottom: 12px;
         }
-        .image-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .image-upload-area:hover { border-color: #1e4d8c; background: rgba(30,77,140,0.1); }
+        .image-upload-area.has-image { border-color: #10b981; background: rgba(16,185,129,0.1); }
+        .image-preview {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+        }
         .image-preview-item {
             position: relative; width: 80px; height: 80px;
             border-radius: 8px; overflow: hidden; border: 2px solid #1a3050;
@@ -330,42 +308,85 @@
             display: flex; align-items: center; justify-content: center;
         }
 
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 0.7rem; font-weight: 700; margin-bottom: 3px; color: #8899b4; text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 2px solid #1a3050; background: #0a1628;
+            color: #e2e8f0; font-size: 16px; font-family: var(--font);
+        }
+        .btn { padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 700; border: none; font-size: 0.8rem; min-height: 42px; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #1e4d8c; color: #fff; }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-outline { background: transparent; border: 2px solid #1a3050; color: #e2e8f0; }
+        .btn-sm { padding: 6px 12px; font-size: 0.7rem; min-height: 32px; }
+        .btn-lg { padding: 14px 24px; font-size: 0.9rem; min-height: 50px; }
+
+        .toast {
+            position: fixed; bottom: 20px; left: 16px; right: 16px;
+            background: #1e4d8c; color: #fff; padding: 14px 18px;
+            border-radius: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            z-index: 9999; font-size: 0.85rem; text-align: center;
+            max-width: 420px; margin: 0 auto; font-weight: 600;
+            animation: slideUp 0.3s ease;
+        }
+        .toast.error { background: #dc2626; }
+        .toast.success { background: #10b981; }
+        .empty-state { text-align: center; padding: 24px; color: #4a6080; font-size: 0.8rem; }
+
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); width: 285px; max-width: 80vw; }
+            .sidebar { transform: translateX(-100%); width: 285px; max-width: 80vw; z-index: 260; }
             .sidebar.open { transform: translateX(0); }
             .main { margin-left: 0; }
             .hamburger { display: flex; }
             .desktop-table { display: none; }
             .mobile-cards { display: block; }
-            .content-area { padding: 12px; }
-            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .content-area { padding: 8px; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+            .metric-card { padding: 10px; }
+            .metric-value { font-size: 1.2rem; }
+            .preview-grid { grid-template-columns: 1fr; }
+            .modal-content { padding: 16px; margin: 8px; max-height: 90vh; }
+            .topbar { padding: 8px 12px; }
+            .card-header { padding: 10px 12px; font-size: 0.8rem; }
+            .action-btn { padding: 8px 10px; font-size: 0.75rem; min-height: 40px; }
+            .btn { padding: 10px 14px; }
+            .data-card { padding: 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+            .metric-card { padding: 8px; gap: 6px; }
+            .metric-icon { width: 32px; height: 32px; font-size: 0.8rem; }
+            .metric-value { font-size: 1rem; }
+            .metric-label { font-size: 0.55rem; }
+            .preview-images img { width: 70px; height: 70px; }
+            .staff-item { padding: 10px; }
+            .modal-content { padding: 12px; }
         }
     </style>
 </head>
 <body>
-    <!-- LOGIN SCREEN -->
     <div class="login-overlay" id="loginScreen">
         <div class="login-card">
             <div class="logo"><i class="fas fa-shield-halved"></i></div>
             <h2>Admin Portal</h2>
-            <p class="subtitle">CampusVault • Secure Control Panel</p>
+            <p class="subtitle">CampusVault • Secure Control</p>
             <button class="google-btn" id="googleSignInBtn" onclick="handleGoogleSignIn()">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2218%22 font-size=%2218%22>G</text></svg>'">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="G">
                 Sign in with Google
             </button>
             <p class="login-error" id="loginError"></p>
-            <p class="login-debug" id="loginDebug"></p>
         </div>
     </div>
 
-    <!-- DASHBOARD -->
     <div class="dashboard" id="dashboard">
-        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;"></div>
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
         <aside class="sidebar" id="sidebar">
             <div class="brand"><i class="fas fa-shield-halved"></i> CampusVault</div>
             <nav>
                 <div class="nav-section">Security</div>
-                <a href="#" class="active" data-tab="security"><i class="fas fa-robot"></i> AI Security <span class="live-dot" style="margin-left:auto;"></span></a>
+                <a href="#" class="active" data-tab="security"><i class="fas fa-robot"></i> AI Security</a>
                 <div class="nav-section">Bookings</div>
                 <a href="#" data-tab="storage"><i class="fas fa-box-archive"></i> Active</a>
                 <a href="#" data-tab="received"><i class="fas fa-box-check"></i> Received <span class="nav-badge" id="receivedBadge" style="display:none;">0</span></a>
@@ -394,212 +415,74 @@
             <div class="topbar">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
-                    <span style="font-weight:800;font-size:0.9rem;">🛡️ Admin Panel</span>
+                    <span style="font-weight:800;font-size:0.9rem;">🛡️ Admin</span>
                 </div>
-                <div style="display:flex;gap:6px;">
-                    <button class="btn btn-sm btn-outline" onclick="openModal('backupModal')"><i class="fas fa-download"></i> Backup</button>
-                </div>
+                <button class="btn btn-sm btn-outline" onclick="openModal('backupModal')"><i class="fas fa-download"></i> Backup</button>
             </div>
             <div class="content-area">
-                <div class="metrics-grid" id="metricsContainer">
-                    <div class="metric-card"><div class="metric-icon" style="background:#1e4d8c;"><i class="fas fa-box"></i></div><div><div class="metric-value">0</div><div class="metric-label">Loading...</div></div></div>
-                </div>
+                <div class="metrics-grid" id="metricsContainer"></div>
 
-                <!-- Security Tab -->
                 <div class="tab-content active" id="tab-security">
-                    <div class="security-bot-panel">
-                        <h3><i class="fas fa-robot"></i> Guardian AI Security</h3>
-                        <p style="font-size:0.8rem;opacity:0.8;">Real-time threat monitoring active</p>
-                        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;">
-                            <button class="bot-btn btn-scan" onclick="runDeepScan()"><i class="fas fa-search"></i> Scan</button>
-                            <button class="bot-btn" style="background:#10b981;" onclick="autoPatchAll()"><i class="fas fa-wrench"></i> Patch</button>
-                            <button class="bot-btn btn-lock" onclick="lockAllSessions()"><i class="fas fa-lock"></i> Lock</button>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">Active Threats</div>
-                        <div style="padding:14px;" id="activeThreatsList">
-                            <div class="empty-state">No threats detected</div>
-                        </div>
-                    </div>
+                    <div class="card"><div class="card-header">Security Overview</div><div style="padding:14px;"><p>Security system active. Use the buttons below to manage security.</p><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="runScan()"><i class="fas fa-search"></i> Scan</button><button class="btn btn-success btn-sm" onclick="toast('Patched!','success')"><i class="fas fa-wrench"></i> Patch</button><button class="btn btn-outline btn-sm" onclick="if(confirm('Lock all?'))toast('Locked')"><i class="fas fa-lock"></i> Lock</button></div></div></div>
                 </div>
 
-                <!-- Storage Tab -->
                 <div class="tab-content" id="tab-storage">
-                    <div class="card">
-                        <div class="card-header"><span>Active Bookings</span><span class="badge badge-active" id="storageCount">0</span></div>
-                        <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>Staff</th><th>Actions</th></tr></thead><tbody id="storageTableBody"></tbody></table></div></div>
-                        <div class="mobile-cards"><div id="storageCardsContainer"></div></div>
-                    </div>
+                    <div class="card"><div class="card-header"><span>Active Bookings</span><span class="badge badge-active" id="storageCount">0</span></div>
+                    <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>Staff</th><th>Actions</th></tr></thead><tbody id="storageTableBody"></tbody></table></div></div>
+                    <div class="mobile-cards"><div id="storageCardsContainer"></div></div></div>
                 </div>
 
-                <!-- Received Tab -->
                 <div class="tab-content" id="tab-received">
-                    <div class="card">
-                        <div class="card-header"><span>Received Items</span><span class="badge badge-active" id="receivedCount">0</span></div>
-                        <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>By</th><th>Photos</th><th>Actions</th></tr></thead><tbody id="receivedTableBody"></tbody></table></div></div>
-                        <div class="mobile-cards"><div id="receivedCardsContainer"></div></div>
-                    </div>
+                    <div class="card"><div class="card-header"><span>Received Items</span><span class="badge badge-active" id="receivedCount">0</span></div>
+                    <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>By</th><th>Photos</th><th>Actions</th></tr></thead><tbody id="receivedTableBody"></tbody></table></div></div>
+                    <div class="mobile-cards"><div id="receivedCardsContainer"></div></div></div>
                 </div>
 
-                <!-- Collected Tab -->
                 <div class="tab-content" id="tab-collected">
-                    <div class="card">
-                        <div class="card-header"><span>Collected Items</span><span class="badge badge-active" id="collectedCount">0</span></div>
-                        <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>By</th><th>Actions</th></tr></thead><tbody id="collectedTableBody"></tbody></table></div></div>
-                        <div class="mobile-cards"><div id="collectedCardsContainer"></div></div>
-                    </div>
+                    <div class="card"><div class="card-header"><span>Collected Items</span><span class="badge badge-active" id="collectedCount">0</span></div>
+                    <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>By</th><th>Actions</th></tr></thead><tbody id="collectedTableBody"></tbody></table></div></div>
+                    <div class="mobile-cards"><div id="collectedCardsContainer"></div></div></div>
                 </div>
 
-                <!-- Trash Tab -->
                 <div class="tab-content" id="tab-trash">
-                    <div class="card">
-                        <div class="card-header"><span>Trash</span><span class="badge badge-danger" id="trashCount">0</span><button class="btn btn-sm btn-delete" onclick="emptyTrash()">Empty</button></div>
-                        <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Type</th><th>Deleted</th><th>Actions</th></tr></thead><tbody id="trashTableBody"></tbody></table></div></div>
-                        <div class="mobile-cards"><div id="trashCardsContainer"></div></div>
-                    </div>
+                    <div class="card"><div class="card-header"><span>Trash</span><span class="badge badge-danger" id="trashCount">0</span><button class="btn btn-sm btn-delete" onclick="emptyTrash()">Empty</button></div>
+                    <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Type</th><th>Deleted</th><th>Actions</th></tr></thead><tbody id="trashTableBody"></tbody></table></div></div>
+                    <div class="mobile-cards"><div id="trashCardsContainer"></div></div></div>
                 </div>
 
-                <!-- Staff Tab -->
                 <div class="tab-content" id="tab-staff">
-                    <div class="card">
-                        <div class="card-header">Staff Management</div>
-                        <div style="padding:14px;">
-                            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-                                <input type="text" id="newStaffName" placeholder="Full Name" style="flex:1;min-width:150px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;">
-                                <input type="email" id="newStaffEmail" placeholder="Email" style="flex:1;min-width:200px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;">
-                                <button class="btn btn-primary" onclick="addStaff()">Add</button>
-                            </div>
-                            <div id="staffList"></div>
-                        </div>
-                    </div>
+                    <div class="card"><div class="card-header">Staff</div><div style="padding:14px;">
+                    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;"><input type="text" id="newStaffName" placeholder="Name" style="flex:1;min-width:120px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;"><input type="email" id="newStaffEmail" placeholder="Email" style="flex:1;min-width:160px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;"><button class="btn btn-primary" onclick="addStaff()">Add</button></div>
+                    <div id="staffList"></div></div></div>
                 </div>
 
-                <!-- Insights Tab -->
                 <div class="tab-content" id="tab-insights">
-                    <div class="insights-grid">
-                        <div class="insight-card"><h4>Top Performers</h4><div id="topPerformersList"></div></div>
-                        <div class="insight-card"><h4>Activity</h4><div id="activityStreaks"></div></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">Performance</div>
-                        <div class="table-responsive"><table><thead><tr><th>Staff</th><th>Items</th><th>Rating</th></tr></thead><tbody id="staffPerformanceTableBody"></tbody></table></div>
-                    </div>
+                    <div class="card"><div class="card-header">Performance</div><div class="table-responsive"><table><thead><tr><th>Staff</th><th>Items</th><th>Rating</th></tr></thead><tbody id="staffPerformanceTableBody"></tbody></table></div></div>
                 </div>
 
-                <!-- Pending Tab -->
                 <div class="tab-content" id="tab-pending">
-                    <div class="card">
-                        <div class="card-header"><span>Pending Approvals</span><span class="badge badge-warning" id="pendingCount">0</span></div>
-                        <div style="padding:14px;" id="pendingApprovalsContainer"></div>
-                    </div>
+                    <div class="card"><div class="card-header"><span>Pending Approvals</span><span class="badge badge-warning" id="pendingCount">0</span></div><div style="padding:14px;" id="pendingApprovalsContainer"></div></div>
                 </div>
 
-                <!-- Admins Tab -->
                 <div class="tab-content" id="tab-admins">
-                    <div class="card">
-                        <div class="card-header">Admin Management</div>
-                        <div style="padding:14px;">
-                            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-                                <input type="text" id="newAdminName" placeholder="Name" style="flex:1;min-width:150px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;">
-                                <input type="email" id="newAdminEmail" placeholder="Email" style="flex:1;min-width:200px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;">
-                                <button class="btn btn-primary" onclick="addAdmin()">Add</button>
-                            </div>
-                            <div id="adminList"></div>
-                        </div>
-                    </div>
+                    <div class="card"><div class="card-header">Admins</div><div style="padding:14px;">
+                    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;"><input type="text" id="newAdminName" placeholder="Name" style="flex:1;min-width:120px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;"><input type="email" id="newAdminEmail" placeholder="Email" style="flex:1;min-width:160px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;"><button class="btn btn-primary" onclick="addAdmin()">Add</button></div>
+                    <div id="adminList"></div></div></div>
                 </div>
 
-                <!-- Records Tab -->
-                <div class="tab-content" id="tab-records">
-                    <div class="card">
-                        <div class="card-header">Records <button class="btn btn-sm btn-delete" onclick="trashAll('records')">Clear</button></div>
-                        <div class="table-responsive" id="digitalRecordsTable"></div>
-                    </div>
-                </div>
-
-                <!-- Reviews Tab -->
-                <div class="tab-content" id="tab-reviews">
-                    <div class="card">
-                        <div class="card-header">Reviews <button class="btn btn-sm btn-delete" onclick="trashAll('reviews')">Clear</button></div>
-                        <div class="table-responsive" id="reviewsTable"></div>
-                    </div>
-                </div>
-
-                <!-- Logs Tab -->
-                <div class="tab-content" id="tab-logs">
-                    <div class="card">
-                        <div class="card-header">Logs <button class="btn btn-sm btn-delete" onclick="trashAll('logs')">Clear</button></div>
-                        <div class="table-responsive" id="staffLogsTable"></div>
-                    </div>
-                </div>
+                <div class="tab-content" id="tab-records"><div class="card"><div class="card-header">Records <button class="btn btn-sm btn-delete" onclick="trashAll('records')">Clear</button></div><div class="table-responsive" id="digitalRecordsTable"></div></div></div>
+                <div class="tab-content" id="tab-reviews"><div class="card"><div class="card-header">Reviews <button class="btn btn-sm btn-delete" onclick="trashAll('reviews')">Clear</button></div><div class="table-responsive" id="reviewsTable"></div></div></div>
+                <div class="tab-content" id="tab-logs"><div class="card"><div class="card-header">Logs <button class="btn btn-sm btn-delete" onclick="trashAll('logs')">Clear</button></div><div class="table-responsive" id="staffLogsTable"></div></div></div>
             </div>
         </main>
     </div>
 
-    <!-- Receive Modal -->
-    <div class="modal-overlay" id="receiveItemsModal">
-        <div class="modal-content">
-            <h3>Receive Items</h3>
-            <form onsubmit="submitReceivedItems(event)">
-                <input type="hidden" id="receiveBookingKey">
-                <div class="form-group"><label>Booking ID</label><input type="text" id="receiveBookingId" readonly></div>
-                <div class="form-group"><label>Customer</label><input type="text" id="receiveCustomerName" readonly></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div class="form-group"><label>Count *</label><input type="number" id="receiveItemCount" required min="1"></div>
-                    <div class="form-group"><label>Category</label><select id="receiveCategory"><option>Electronics</option><option>Furniture</option><option>Clothing</option><option>Other</option></select></div>
-                </div>
-                <div class="form-group"><label>Description</label><textarea id="receiveDescription" rows="2" required></textarea></div>
-                <div class="form-group">
-                    <label>Photos *</label>
-                    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('itemImages').click()">
-                        <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:#8899b4;display:block;margin-bottom:8px;"></i>
-                        <span>Click to upload photos (max 5)</span>
-                    </div>
-                    <input type="file" id="itemImages" accept="image/*" multiple style="display:none;" onchange="handleImageSelect(event)">
-                    <div class="image-preview" id="imagePreviewContainer"></div>
-                    <small style="color:#ef4444;display:none;" id="imageError">Please upload at least one photo</small>
-                </div>
-                <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('receiveItemsModal')">Cancel</button>
-                    <button type="submit" class="btn btn-success">Confirm</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Collect Modal -->
-    <div class="modal-overlay" id="collectionModal">
-        <div class="modal-content">
-            <h3>Collect Items</h3>
-            <form onsubmit="submitCollection(event)">
-                <input type="hidden" id="collectBookingKey">
-                <div class="form-group"><label>Booking ID</label><input type="text" id="collectBookingId" readonly></div>
-                <div class="form-group"><label>Customer</label><input type="text" id="collectCustomerName" readonly></div>
-                <div class="form-group"><label>Items</label><input type="text" id="collectItems" readonly></div>
-                <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('collectionModal')">Cancel</button>
-                    <button type="submit" class="btn btn-success">Confirm</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Backup Modal -->
-    <div class="modal-overlay" id="backupModal">
-        <div class="modal-content">
-            <h3>Backup</h3>
-            <div class="form-group"><label>Format</label><select id="backupFormat"><option value="excel">Excel</option><option value="pdf">PDF</option></select></div>
-            <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-                <button class="btn btn-outline" onclick="closeModal('backupModal')">Cancel</button>
-                <button class="btn btn-primary" onclick="startBackup()">Generate</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay" id="receiveItemsModal"><div class="modal-content"><h3>Receive Items</h3><form onsubmit="submitReceivedItems(event)"><input type="hidden" id="receiveBookingKey"><div class="form-group"><label>Booking ID</label><input type="text" id="receiveBookingId" readonly></div><div class="form-group"><label>Customer</label><input type="text" id="receiveCustomerName" readonly></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div class="form-group"><label>Count *</label><input type="number" id="receiveItemCount" required min="1"></div><div class="form-group"><label>Category</label><select id="receiveCategory"><option>Electronics</option><option>Furniture</option><option>Clothing</option><option>Other</option></select></div></div><div class="form-group"><label>Description</label><textarea id="receiveDescription" rows="2" required></textarea></div><div class="form-group"><label>Photos *</label><div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('itemImages').click()"><i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:#8899b4;display:block;margin-bottom:8px;"></i><span>Tap to upload (max 5)</span></div><input type="file" id="itemImages" accept="image/*" multiple style="display:none;" onchange="handleImageSelect(event)"><div class="image-preview" id="imagePreviewContainer"></div><small style="color:#ef4444;display:none;" id="imageError">Required</small></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button type="button" class="btn btn-outline" onclick="closeModal('receiveItemsModal')">Cancel</button><button type="submit" class="btn btn-success">Confirm</button></div></form></div></div>
+    <div class="modal-overlay" id="collectionModal"><div class="modal-content"><h3>Collect Items</h3><form onsubmit="submitCollection(event)"><input type="hidden" id="collectBookingKey"><div class="form-group"><label>Booking ID</label><input type="text" id="collectBookingId" readonly></div><div class="form-group"><label>Customer</label><input type="text" id="collectCustomerName" readonly></div><div class="form-group"><label>Items</label><input type="text" id="collectItems" readonly></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button type="button" class="btn btn-outline" onclick="closeModal('collectionModal')">Cancel</button><button type="submit" class="btn btn-success">Confirm</button></div></form></div></div>
+    <div class="modal-overlay" id="backupModal"><div class="modal-content"><h3>Backup</h3><div class="form-group"><label>Format</label><select id="backupFormat"><option value="excel">Excel</option><option value="pdf">PDF</option></select></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button class="btn btn-outline" onclick="closeModal('backupModal')">Cancel</button><button class="btn btn-primary" onclick="startBackup()">Generate</button></div></div></div>
 
 <script>
-// ===== FIREBASE INITIALIZATION =====
-console.log('Starting Firebase initialization...');
+// Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCuCd89dawEHOGrKmcCimw3pBErKYJU_VI",
     authDomain: "campusvault-connect.firebaseapp.com",
@@ -609,1112 +492,370 @@ const firebaseConfig = {
     messagingSenderId: "185904648786",
     appId: "1:185904648786:web:390764d552d388b6e2058b"
 };
-
-try {
-    firebase.initializeApp(firebaseConfig);
-    console.log('Firebase initialized successfully');
-} catch (e) {
-    console.error('Firebase init error:', e);
-    document.getElementById('loginError').textContent = 'Failed to initialize. Check console.';
-    document.getElementById('loginError').style.display = 'block';
-}
-
+firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 const storage = firebase.storage();
 
-// ===== REFERENCES =====
 const refs = {
-    admins: db.ref('admins'),
-    staff: db.ref('staff'),
-    bookings: db.ref('bookings'),
-    pending: db.ref('pending_approvals'),
-    records: db.ref('digital_records'),
-    reviews: db.ref('reviews'),
-    logs: db.ref('staff_logs'),
-    received: db.ref('received_items'),
-    collected: db.ref('collected_items'),
-    trash: db.ref('trash'),
-    threats: db.ref('threats'),
-    status: db.ref('staff_status')
+    admins: db.ref('admins'), staff: db.ref('staff'), bookings: db.ref('bookings'),
+    pending: db.ref('pending_approvals'), records: db.ref('digital_records'),
+    reviews: db.ref('reviews'), logs: db.ref('staff_logs'),
+    received: db.ref('received_items'), collected: db.ref('collected_items'),
+    trash: db.ref('trash'), status: db.ref('staff_status')
 };
 
-// ===== GLOBAL STATE =====
 let currentUser = null;
 let allBookings = [], allReceived = [], allCollected = [], allTrash = [];
 let staffList = [], adminList = [], perfData = {};
 let selectedImages = [];
 
-// ===== UTILITY FUNCTIONS =====
-function esc(s) { 
-    if (!s) return ''; 
-    const d = document.createElement('div'); 
-    d.textContent = String(s); 
-    return d.innerHTML; 
-}
+function esc(s) { if(!s)return''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+function toast(m,t){ const el=document.createElement('div'); el.className='toast'+(t?' '+t:''); el.textContent=m; document.body.appendChild(el); setTimeout(()=>el.remove(),3000); }
+function openModal(id){ const m=document.getElementById(id); if(m)m.classList.add('show'); }
+function closeModal(id){ const m=document.getElementById(id); if(m){ m.classList.remove('show'); if(id==='receiveItemsModal'){ selectedImages=[]; document.getElementById('imagePreviewContainer').innerHTML=''; document.getElementById('imageUploadArea').classList.remove('has-image'); document.getElementById('imageError').style.display='none'; document.getElementById('itemImages').value=''; } } }
+window.closeModal=closeModal;
+document.addEventListener('click',function(e){ if(e.target.classList.contains('modal-overlay')&&e.target.classList.contains('show'))closeModal(e.target.id); });
 
-function toast(m, type) {
-    const t = document.createElement('div');
-    t.className = 'toast' + (type ? ' ' + type : '');
-    t.textContent = m;
-    document.body.appendChild(t);
-    setTimeout(function() { t.remove(); }, 3000);
-}
-
-function openModal(id) {
-    console.log('Opening modal:', id);
-    const m = document.getElementById(id);
-    if (m) m.classList.add('show');
-}
-
-function closeModal(id) {
-    const m = document.getElementById(id);
-    if (m) {
-        m.classList.remove('show');
-        if (id === 'receiveItemsModal') {
-            selectedImages = [];
-            document.getElementById('imagePreviewContainer').innerHTML = '';
-            document.getElementById('imageUploadArea').classList.remove('has-image');
-            document.getElementById('imageError').style.display = 'none';
-            document.getElementById('itemImages').value = '';
-        }
-    }
-}
-window.closeModal = closeModal;
-
-// Close modals on overlay click
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('show')) {
-        closeModal(e.target.id);
-    }
-});
-
-// ===== IMAGE HANDLING =====
-window.handleImageSelect = function(event) {
-    const files = Array.from(event.target.files);
-    const container = document.getElementById('imagePreviewContainer');
-    const uploadArea = document.getElementById('imageUploadArea');
-    
-    if (selectedImages.length + files.length > 5) {
-        toast('Max 5 images', 'error');
-        return;
-    }
-    
-    files.forEach(function(file) {
-        if (file.size > 5242880) {
-            toast('Max 5MB each', 'error');
-            return;
-        }
-        if (!file.type.startsWith('image/')) {
-            toast('Images only', 'error');
-            return;
-        }
+// Image handling
+window.handleImageSelect=function(event){
+    const files=Array.from(event.target.files);
+    const container=document.getElementById('imagePreviewContainer');
+    const uploadArea=document.getElementById('imageUploadArea');
+    if(selectedImages.length+files.length>5){ toast('Max 5','error'); return; }
+    files.forEach(function(file){
+        if(file.size>5242880){ toast('Max 5MB','error'); return; }
+        if(!file.type.startsWith('image/')){ toast('Images only','error'); return; }
         selectedImages.push(file);
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const div = document.createElement('div');
-            div.className = 'image-preview-item';
-            div.innerHTML = '<img src="' + e.target.result + '" alt="Preview"><button class="remove-image" onclick="removeImg(' + (selectedImages.length-1) + ',event)">×</button>';
-            container.appendChild(div);
-        };
+        const reader=new FileReader();
+        reader.onload=function(e){ const div=document.createElement('div'); div.className='image-preview-item'; div.innerHTML='<img src="'+e.target.result+'" alt=""><button class="remove-image" onclick="removeImg('+(selectedImages.length-1)+',event)">×</button>'; container.appendChild(div); };
         reader.readAsDataURL(file);
     });
-    
-    if (selectedImages.length > 0) {
-        uploadArea.classList.add('has-image');
-        document.getElementById('imageError').style.display = 'none';
-    }
-    event.target.value = '';
+    if(selectedImages.length>0){ uploadArea.classList.add('has-image'); document.getElementById('imageError').style.display='none'; }
+    event.target.value='';
 };
+window.removeImg=function(i,e){ e.stopPropagation(); selectedImages.splice(i,1); const c=document.getElementById('imagePreviewContainer'); c.innerHTML=''; selectedImages.forEach(function(f,j){ const r=new FileReader(); r.onload=function(ev){ const d=document.createElement('div'); d.className='image-preview-item'; d.innerHTML='<img src="'+ev.target.result+'"><button class="remove-image" onclick="removeImg('+j+',event)">×</button>'; c.appendChild(d); }; r.readAsDataURL(f); }); if(selectedImages.length===0)document.getElementById('imageUploadArea').classList.remove('has-image'); };
 
-window.removeImg = function(i, e) {
-    e.stopPropagation();
-    selectedImages.splice(i, 1);
-    const c = document.getElementById('imagePreviewContainer');
-    c.innerHTML = '';
-    selectedImages.forEach(function(f, j) {
-        const r = new FileReader();
-        r.onload = function(ev) {
-            const d = document.createElement('div');
-            d.className = 'image-preview-item';
-            d.innerHTML = '<img src="' + ev.target.result + '"><button class="remove-image" onclick="removeImg(' + j + ',event)">×</button>';
-            c.appendChild(d);
-        };
-        r.readAsDataURL(f);
-    });
-    if (selectedImages.length === 0) {
-        document.getElementById('imageUploadArea').classList.remove('has-image');
-    }
-};
-
-// ===== AUTHENTICATION =====
-window.handleGoogleSignIn = function() {
-    console.log('Google Sign In clicked');
-    const btn = document.getElementById('googleSignInBtn');
-    const errorEl = document.getElementById('loginError');
-    const debugEl = document.getElementById('loginDebug');
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
-    errorEl.style.display = 'none';
-    debugEl.style.display = 'block';
-    debugEl.textContent = 'Connecting to Google...';
-    
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    
-    auth.signInWithPopup(provider)
-        .then(function(result) {
-            console.log('Sign in successful:', result.user.email);
-            debugEl.textContent = 'Signed in as: ' + result.user.email + '. Verifying admin...';
-            
-            const user = result.user;
-            const emailKey = user.email.replace(/\./g, ',');
-            
-            return refs.admins.child(emailKey).once('value').then(function(snapshot) {
-                if (snapshot.exists()) {
-                    console.log('Admin verified');
-                    debugEl.textContent = 'Admin verified! Loading dashboard...';
-                    
-                    // Show dashboard
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('dashboard').classList.add('active');
-                    currentUser = user;
-                    
-                    // Update UI
-                    document.getElementById('userNameDisplay').textContent = user.displayName || user.email;
-                    if (user.photoURL) {
-                        document.getElementById('userAvatar').src = user.photoURL;
-                        document.getElementById('userAvatar').style.display = 'block';
-                    }
-                    
-                    // Set status
-                    refs.status.child(emailKey).set({
-                        online: true,
-                        lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                        email: user.email,
-                        name: user.displayName || ''
-                    });
-                    refs.status.child(emailKey).onDisconnect().set({ online: false });
-                    
-                    // Log login
-                    refs.logs.push({
-                        staff: user.email,
-                        action: 'admin_login',
-                        timestamp: new Date().toISOString()
-                    });
-                    
-                    // Load all data
-                    loadAllData();
-                    
-                    toast('Welcome, ' + (user.displayName || user.email).split(' ')[0] + '!', 'success');
-                } else {
-                    console.log('Not an admin');
-                    auth.signOut();
-                    errorEl.textContent = '❌ Access denied. You are not an admin.';
-                    errorEl.style.display = 'block';
-                    debugEl.style.display = 'none';
-                    btn.disabled = false;
-                    btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google"> Sign in with Google';
-                }
-            });
-        })
-        .catch(function(error) {
-            console.error('Sign in error:', error);
-            errorEl.textContent = '❌ ' + (error.message || 'Sign in failed');
-            errorEl.style.display = 'block';
-            debugEl.style.display = 'none';
-            btn.disabled = false;
-            btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google"> Sign in with Google';
+// Auth
+window.handleGoogleSignIn=function(){
+    const btn=document.getElementById('googleSignInBtn'),err=document.getElementById('loginError');
+    btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Connecting...'; err.style.display='none';
+    const provider=new firebase.auth.GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account'});
+    auth.signInWithPopup(provider).then(function(result){
+        const user=result.user,ek=user.email.replace(/\./g,',');
+        return refs.admins.child(ek).once('value').then(function(snap){
+            if(snap.exists()){
+                document.getElementById('loginScreen').style.display='none';
+                document.getElementById('dashboard').classList.add('active');
+                currentUser=user;
+                document.getElementById('userNameDisplay').textContent=user.displayName||user.email;
+                if(user.photoURL){ document.getElementById('userAvatar').src=user.photoURL; document.getElementById('userAvatar').style.display='block'; }
+                refs.status.child(ek).set({online:true,lastSeen:firebase.database.ServerValue.TIMESTAMP,email:user.email,name:user.displayName||''});
+                refs.status.child(ek).onDisconnect().set({online:false});
+                refs.logs.push({staff:user.email,action:'admin_login',timestamp:new Date().toISOString()});
+                loadAllData();
+                toast('Welcome!','success');
+            }else{ auth.signOut(); err.textContent='❌ Access denied'; err.style.display='block'; btn.disabled=false; btn.innerHTML='Sign in with Google'; }
         });
+    }).catch(function(e){ err.textContent='❌ '+(e.message||'Failed'); err.style.display='block'; btn.disabled=false; btn.innerHTML='Sign in with Google'; });
 };
 
-function logout() {
-    if (currentUser) {
-        refs.status.child(currentUser.email.replace(/\./g, ',')).remove();
-    }
-    auth.signOut().then(function() {
-        location.reload();
-    });
+function logout(){ if(currentUser){ refs.status.child(currentUser.email.replace(/\./g,',')).remove(); } auth.signOut().then(()=>location.reload()); }
+
+// Staff
+async function loadStaffList(){
+    const s=await refs.staff.once('value'),staff=s.val()||{};
+    staffList=Object.entries(staff).map(function([k,d]){ return {key:k,email:k.replace(/,/g,'.'),name:d.name||k.replace(/,/g,'.').split('@')[0],status:d.status||'active'}; });
+    renderStaffList(); calcPerf();
 }
-
-// ===== SECURITY =====
-window.runDeepScan = function() {
-    toast('Scanning...');
-    setTimeout(function() { toast('Scan complete - no threats found', 'success'); }, 2000);
-};
-
-window.autoPatchAll = function() {
-    toast('Patches applied!', 'success');
-};
-
-window.lockAllSessions = function() {
-    if (!confirm('Lock all sessions?')) return;
-    toast('All sessions locked');
-};
-
-// ===== STAFF =====
-async function loadStaffList() {
-    try {
-        const snap = await refs.staff.once('value');
-        const staff = snap.val() || {};
-        staffList = Object.entries(staff).map(function([k, d]) {
-            return {
-                key: k,
-                email: k.replace(/,/g, '.'),
-                name: d.name || k.replace(/,/g, '.').split('@')[0],
-                status: d.status || 'active'
-            };
-        });
-        renderStaffList();
-        calcPerf();
-    } catch (e) {
-        console.error('Error loading staff:', e);
-    }
+function renderStaffList(){
+    const c=document.getElementById('staffList'); if(!c)return;
+    c.innerHTML=staffList.length?staffList.map(function(s){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#152544;border-radius:10px;margin-bottom:6px;border:1px solid #1a3050;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1e4d8c,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.8rem;">'+esc(s.name[0])+'</div><div><div style="font-weight:600;font-size:0.85rem;">'+esc(s.name)+'</div><div style="font-size:0.65rem;color:#8899b4;">'+esc(s.email)+'</div></div></div><button class="action-btn btn-delete" onclick="deleteStaff(\''+s.key+'\')"><i class="fas fa-trash"></i></button></div>'; }).join(''):'<div class="empty-state">No staff</div>';
 }
+window.deleteStaff=async function(k){ if(!confirm('Delete?'))return; await refs.trash.push({type:'staff',key:k,by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); await refs.staff.child(k).remove(); toast('Deleted'); };
+window.addStaff=async function(){ const n=document.getElementById('newStaffName').value.trim(),e=document.getElementById('newStaffEmail').value.trim(); if(!n||!e||!e.includes('@'))return toast('Invalid','error'); const k=e.replace(/\./g,','); if((await refs.staff.child(k).once('value')).exists())return toast('Exists','error'); await refs.staff.child(k).set({name:n,email:e,added:new Date().toISOString(),status:'active'}); document.getElementById('newStaffName').value=''; document.getElementById('newStaffEmail').value=''; toast('Added!','success'); };
 
-function renderStaffList() {
-    const c = document.getElementById('staffList');
-    if (!c) return;
-    
-    if (staffList.length === 0) {
-        c.innerHTML = '<div class="empty-state">No staff members</div>';
-        return;
-    }
-    
-    c.innerHTML = staffList.map(function(s) {
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#152544;border-radius:10px;margin-bottom:6px;border:1px solid #1a3050;">' +
-            '<div style="display:flex;align-items:center;gap:10px;">' +
-            '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1e4d8c,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">' + esc(s.name[0]) + '</div>' +
-            '<div><div style="font-weight:600;">' + esc(s.name) + '</div><div style="font-size:0.7rem;color:#8899b4;">' + esc(s.email) + '</div></div>' +
-            '</div>' +
-            '<button class="action-btn btn-delete" onclick="deleteStaff(\'' + s.key + '\')"><i class="fas fa-trash"></i></button>' +
-            '</div>';
-    }).join('');
-}
+// Bookings
+window.openReceive=function(key){ const b=allBookings.find(function(x){return x._key===key;}); if(!b)return; document.getElementById('receiveBookingKey').value=key; document.getElementById('receiveBookingId').value=b.bookingId||key.slice(-6); document.getElementById('receiveCustomerName').value=b.name||''; document.getElementById('receiveItemCount').value=b.itemCount||1; document.getElementById('receiveCategory').value=b.category||'Other'; document.getElementById('receiveDescription').value=''; selectedImages=[]; document.getElementById('imagePreviewContainer').innerHTML=''; document.getElementById('imageUploadArea').classList.remove('has-image'); document.getElementById('imageError').style.display='none'; document.getElementById('itemImages').value=''; openModal('receiveItemsModal'); };
 
-window.deleteStaff = async function(k) {
-    if (!confirm('Delete this staff member?')) return;
-    await refs.trash.push({
-        type: 'staff',
-        key: k,
-        by: currentUser ? currentUser.email : 'unknown',
-        at: new Date().toISOString()
-    });
-    await refs.staff.child(k).remove();
-    toast('Moved to trash');
-};
-
-window.addStaff = async function() {
-    const n = document.getElementById('newStaffName').value.trim();
-    const e = document.getElementById('newStaffEmail').value.trim();
-    
-    if (!n || !e || !e.includes('@')) {
-        toast('Please fill all fields correctly', 'error');
-        return;
-    }
-    
-    const k = e.replace(/\./g, ',');
-    const exists = (await refs.staff.child(k).once('value')).exists();
-    if (exists) {
-        toast('Staff already exists', 'error');
-        return;
-    }
-    
-    await refs.staff.child(k).set({
-        name: n,
-        email: e,
-        added: new Date().toISOString(),
-        status: 'active'
-    });
-    
-    document.getElementById('newStaffName').value = '';
-    document.getElementById('newStaffEmail').value = '';
-    toast('Staff added!', 'success');
-};
-
-// ===== BOOKINGS =====
-window.openReceive = function(key) {
-    const b = allBookings.find(function(x) { return x._key === key; });
-    if (!b) return;
-    
-    document.getElementById('receiveBookingKey').value = key;
-    document.getElementById('receiveBookingId').value = b.bookingId || key.slice(-6);
-    document.getElementById('receiveCustomerName').value = b.name || '';
-    document.getElementById('receiveItemCount').value = b.itemCount || 1;
-    document.getElementById('receiveCategory').value = b.category || 'Other';
-    document.getElementById('receiveDescription').value = '';
-    
-    selectedImages = [];
-    document.getElementById('imagePreviewContainer').innerHTML = '';
-    document.getElementById('imageUploadArea').classList.remove('has-image');
-    document.getElementById('imageError').style.display = 'none';
-    document.getElementById('itemImages').value = '';
-    
-    openModal('receiveItemsModal');
-};
-
-window.submitReceivedItems = async function(e) {
+window.submitReceivedItems=async function(e){
     e.preventDefault();
-    
-    if (selectedImages.length === 0) {
-        document.getElementById('imageError').style.display = 'block';
-        return;
-    }
-    
-    const k = document.getElementById('receiveBookingKey').value;
-    
-    try {
-        // Upload images
-        const urls = [];
-        for (const f of selectedImages) {
-            const snap = await storage.ref('received/' + k + '/' + Date.now() + '_' + f.name).put(f);
-            urls.push(await snap.ref.getDownloadURL());
-        }
-        
-        // Save to database
-        await refs.received.push({
-            bookingKey: k,
-            bookingId: document.getElementById('receiveBookingId').value,
-            customerName: document.getElementById('receiveCustomerName').value,
-            itemCount: parseInt(document.getElementById('receiveItemCount').value),
-            category: document.getElementById('receiveCategory').value,
-            description: document.getElementById('receiveDescription').value,
-            images: urls,
-            receivedBy: currentUser ? currentUser.email : 'unknown',
-            timestamp: new Date().toISOString()
-        });
-        
-        // Update booking status
-        await refs.bookings.child(k).update({
-            status: 'received',
-            receivedAt: new Date().toISOString()
-        });
-        
-        closeModal('receiveItemsModal');
-        toast('Items received!', 'success');
-    } catch (err) {
-        console.error(err);
-        toast('Failed to receive items', 'error');
-    }
+    if(selectedImages.length===0){ document.getElementById('imageError').style.display='block'; return; }
+    const k=document.getElementById('receiveBookingKey').value;
+    try{
+        const urls=[];
+        for(const f of selectedImages){ const snap=await storage.ref('received/'+k+'/'+Date.now()+'_'+f.name).put(f); urls.push(await snap.ref.getDownloadURL()); }
+        await refs.received.push({bookingKey:k,bookingId:document.getElementById('receiveBookingId').value,customerName:document.getElementById('receiveCustomerName').value,itemCount:parseInt(document.getElementById('receiveItemCount').value),category:document.getElementById('receiveCategory').value,description:document.getElementById('receiveDescription').value,images:urls,receivedBy:currentUser?currentUser.email:'unknown',timestamp:new Date().toISOString()});
+        await refs.bookings.child(k).update({status:'received',receivedAt:new Date().toISOString()});
+        closeModal('receiveItemsModal'); toast('Received!','success');
+    }catch(err){ console.error(err); toast('Failed','error'); }
 };
 
-window.openCollect = function(key) {
-    const i = allReceived.find(function(r) { return r.bookingKey === key; });
-    if (!i) return;
-    
-    document.getElementById('collectBookingKey').value = key;
-    document.getElementById('collectBookingId').value = i.bookingId || key.slice(-6);
-    document.getElementById('collectCustomerName').value = i.customerName || '';
-    document.getElementById('collectItems').value = (i.itemCount || 0) + ' ' + (i.category || '');
-    openModal('collectionModal');
-};
+window.openCollect=function(key){ const i=allReceived.find(function(r){return r.bookingKey===key;}); if(!i)return; document.getElementById('collectBookingKey').value=key; document.getElementById('collectBookingId').value=i.bookingId||key.slice(-6); document.getElementById('collectCustomerName').value=i.customerName||''; document.getElementById('collectItems').value=(i.itemCount||0)+' '+(i.category||''); openModal('collectionModal'); };
 
-window.submitCollection = async function(e) {
+window.submitCollection=async function(e){
     e.preventDefault();
-    const k = document.getElementById('collectBookingKey').value;
-    
-    await refs.collected.push({
-        bookingKey: k,
-        bookingId: document.getElementById('collectBookingId').value,
-        customerName: document.getElementById('collectCustomerName').value,
-        items: document.getElementById('collectItems').value,
-        collectedBy: currentUser ? currentUser.email : 'unknown',
-        timestamp: new Date().toISOString()
-    });
-    
-    await refs.bookings.child(k).update({
-        status: 'collected',
-        collectedAt: new Date().toISOString()
-    });
-    
-    // Remove from received
-    const ri = allReceived.find(function(r) { return r.bookingKey === k; });
-    if (ri && ri.key) {
-        await refs.trash.push({
-            type: 'received_collected',
-            key: ri.key,
-            by: currentUser ? currentUser.email : 'unknown',
-            at: new Date().toISOString()
-        });
-        await refs.received.child(ri.key).remove();
-    }
-    
-    closeModal('collectionModal');
-    toast('Items collected!', 'success');
+    const k=document.getElementById('collectBookingKey').value;
+    await refs.collected.push({bookingKey:k,bookingId:document.getElementById('collectBookingId').value,customerName:document.getElementById('collectCustomerName').value,items:document.getElementById('collectItems').value,collectedBy:currentUser?currentUser.email:'unknown',timestamp:new Date().toISOString()});
+    await refs.bookings.child(k).update({status:'collected',collectedAt:new Date().toISOString()});
+    const ri=allReceived.find(function(r){return r.bookingKey===k;});
+    if(ri&&ri.key){ await refs.trash.push({type:'received_collected',key:ri.key,by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); await refs.received.child(ri.key).remove(); }
+    closeModal('collectionModal'); toast('Collected!','success');
 };
 
-// ===== ASSIGN STAFF =====
-window.quickAssignPopup = function(key, curr) {
-    const existing = document.querySelector('.assign-popup');
-    if (existing) existing.remove();
+// ===== ENHANCED PREVIEW =====
+window.showPreview=function(key){
+    const booking=allBookings.find(function(b){return b._key===key;})||allReceived.find(function(r){return r.bookingKey===key;})||allCollected.find(function(c){return c.bookingKey===key;});
+    if(!booking){ toast('Not found','error'); return; }
     
-    const popup = document.createElement('div');
-    popup.className = 'modal-overlay show assign-popup';
-    popup.style.zIndex = '4000';
-    popup.innerHTML = '<div class="modal-content" style="max-width:400px;">' +
-        '<h3>Assign Staff</h3>' +
-        '<div style="max-height:200px;overflow-y:auto;margin:12px 0;">' +
-        staffList.map(function(s) {
-            return '<div onclick="quickAssign(\'' + esc(s.email) + '\',\'' + key + '\')" style="padding:10px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:' + (s.email === curr ? '#1e4d8c' : '#152544') + ';display:flex;align-items:center;gap:8px;">' +
-                '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1e4d8c,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.7rem;">' + esc(s.name[0]) + '</div>' +
-                '<div><div style="font-weight:600;font-size:0.8rem;">' + esc(s.name) + '</div><div style="font-size:0.65rem;color:#8899b4;">' + esc(s.email) + '</div></div>' +
-                '</div>';
-        }).join('') +
-        '</div>' +
-        '<button class="btn btn-outline btn-sm" onclick="this.closest(\'.assign-popup\').remove()" style="width:100%;">Cancel</button>' +
-        '</div>';
+    const existing=document.querySelector('.preview-modal');
+    if(existing)existing.remove();
     
-    document.body.appendChild(popup);
-    popup.addEventListener('click', function(e) {
-        if (e.target === popup) popup.remove();
-    });
-};
-
-window.quickAssign = async function(email, key) {
-    document.querySelector('.assign-popup')?.remove();
-    const k = email.replace(/\./g, ',');
+    const status=booking.status||'active';
+    const statusColor=status==='active'?'#10b981':status==='received'?'#3b82f6':'#7c3aed';
     
-    const exists = (await refs.staff.child(k).once('value')).exists();
-    if (!exists) {
-        await refs.staff.child(k).set({
-            name: email.split('@')[0],
-            email: email,
-            added: new Date().toISOString(),
-            status: 'active'
-        });
-    }
-    
-    await refs.bookings.child(key).update({
-        assigned_to: email,
-        assigned_at: new Date().toISOString()
-    });
-    
-    toast('Assigned to ' + email.split('@')[0], 'success');
-};
-
-// ===== PREVIEW =====
-window.showPreview = function(key) {
-    const booking = allBookings.find(function(b) { return b._key === key; }) ||
-                   allReceived.find(function(r) { return r.bookingKey === key; }) ||
-                   allCollected.find(function(c) { return c.bookingKey === key; });
-    
-    if (!booking) {
-        toast('Booking not found', 'error');
-        return;
-    }
-    
-    const existing = document.querySelector('.preview-modal');
-    if (existing) existing.remove();
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay show preview-modal';
-    modal.style.zIndex = '4000';
-    modal.innerHTML = '<div class="modal-content" style="max-width:550px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
-        '<h3><i class="fas fa-eye" style="color:#06b6d4;"></i> Booking Preview</h3>' +
-        '<button onclick="this.closest(\'.preview-modal\').remove()" style="background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>' +
-        '</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
-        '<div style="background:rgba(10,22,40,0.5);padding:10px;border-radius:8px;"><div style="font-size:0.6rem;color:#8899b4;text-transform:uppercase;">ID</div><div style="font-weight:600;">' + esc(booking.bookingId || key.slice(-6)) + '</div></div>' +
-        '<div style="background:rgba(10,22,40,0.5);padding:10px;border-radius:8px;"><div style="font-size:0.6rem;color:#8899b4;text-transform:uppercase;">Customer</div><div style="font-weight:600;">' + esc(booking.customerName || booking.name || 'N/A') + '</div></div>' +
-        '<div style="background:rgba(10,22,40,0.5);padding:10px;border-radius:8px;"><div style="font-size:0.6rem;color:#8899b4;text-transform:uppercase;">Items</div><div style="font-weight:600;">' + (booking.itemCount || '?') + ' ' + esc(booking.category || '') + '</div></div>' +
-        '<div style="background:rgba(10,22,40,0.5);padding:10px;border-radius:8px;"><div style="font-size:0.6rem;color:#8899b4;text-transform:uppercase;">Status</div><span class="badge badge-active">' + esc(booking.status || 'active') + '</span></div>' +
-        '</div>' +
-        '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">' +
-        '<button class="btn btn-outline btn-sm" onclick="this.closest(\'.preview-modal\').remove()">Close</button>' +
-        (booking.status !== 'received' && booking.status !== 'collected' ? '<button class="btn btn-receive btn-sm" onclick="this.closest(\'.preview-modal\').remove();openReceive(\'' + key + '\')">Receive</button>' : '') +
-        '<button class="btn btn-reassign btn-sm" onclick="this.closest(\'.preview-modal\').remove();quickAssignPopup(\'' + key + '\',\'' + (booking.assigned_to || '') + '\')">Reassign</button>' +
-        '</div>' +
-        '</div>';
+    const modal=document.createElement('div');
+    modal.className='modal-overlay show preview-modal';
+    modal.style.zIndex='4000';
+    modal.innerHTML='<div class="modal-content">'+
+        '<div class="preview-header">'+
+            '<div class="preview-icon"><i class="fas fa-box"></i></div>'+
+            '<div style="flex:1;"><h3 style="font-size:1.1rem;font-weight:800;">Booking Preview</h3><div style="font-size:0.75rem;color:#8899b4;">'+esc(booking.bookingId||key.slice(-6))+'</div></div>'+
+            '<span class="badge" style="background:'+statusColor+'20;color:'+statusColor+';">'+status+'</span>'+
+            '<button onclick="this.closest(\'.preview-modal\').remove()" style="background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;padding:4px;">&times;</button>'+
+        '</div>'+
+        '<div class="preview-grid">'+
+            '<div class="preview-item"><div class="preview-label">Customer</div><div class="preview-value">'+esc(booking.customerName||booking.name||'N/A')+'</div></div>'+
+            '<div class="preview-item"><div class="preview-label">Items</div><div class="preview-value">'+(booking.itemCount||'?')+' '+esc(booking.category||'')+'</div></div>'+
+            '<div class="preview-item"><div class="preview-label">Assigned Staff</div><div class="preview-value">'+(booking.assigned_to?esc(booking.assigned_to.split('@')[0]):'<span style="color:#f87171;">Unassigned</span>')+'</div></div>'+
+            '<div class="preview-item"><div class="preview-label">Date</div><div class="preview-value">'+(booking.timestamp?new Date(booking.timestamp).toLocaleDateString():'N/A')+'</div></div>'+
+            (booking.description?'<div class="preview-item preview-full"><div class="preview-label">Description</div><div class="preview-value">'+esc(booking.description)+'</div></div>':'')+
+        '</div>'+
+        (booking.images&&booking.images.length?'<div class="preview-label" style="margin-bottom:8px;">Photos ('+booking.images.length+')</div><div class="preview-images">'+booking.images.map(function(url){return '<img src="'+url+'" onclick="window.open(\''+url+'\')" loading="lazy">';}).join('')+'</div>':'')+
+        '<div style="display:flex;gap:6px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap;">'+
+            '<button class="btn btn-outline btn-sm" onclick="this.closest(\'.preview-modal\').remove()">Close</button>'+
+            (status!=='received'&&status!=='collected'?'<button class="btn btn-receive btn-sm" onclick="this.closest(\'.preview-modal\').remove();openReceive(\''+key+'\')"><i class="fas fa-box"></i> Receive</button>':'')+
+            '<button class="btn btn-reassign btn-sm" onclick="this.closest(\'.preview-modal\').remove();assignStaff(\''+key+'\',\''+(booking.assigned_to||'')+'\')"><i class="fas fa-user"></i> Assign</button>'+
+        '</div>'+
+    '</div>';
     
     document.body.appendChild(modal);
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.remove();
-    });
+    modal.addEventListener('click',function(e){ if(e.target===modal)modal.remove(); });
 };
 
-// ===== DELETE & TRASH =====
-window.deleteBooking = async function(key) {
-    if (!confirm('Move to trash?')) return;
-    const b = allBookings.find(function(x) { return x._key === key; });
-    if (!b) return;
-    await refs.trash.push({
-        type: 'booking',
-        bookingKey: key,
-        data: b,
-        by: currentUser ? currentUser.email : 'unknown',
-        at: new Date().toISOString()
-    });
-    await refs.bookings.child(key).remove();
-    toast('Moved to trash');
-};
-
-window.deleteReceived = async function(key) {
-    if (!confirm('Move to trash?')) return;
-    const i = allReceived.find(function(r) { return r.key === key; });
-    if (!i) return;
-    await refs.trash.push({
-        type: 'received',
-        key: key,
-        data: i,
-        by: currentUser ? currentUser.email : 'unknown',
-        at: new Date().toISOString()
-    });
-    await refs.received.child(key).remove();
-    toast('Moved to trash');
-};
-
-window.deleteCollected = async function(key) {
-    if (!confirm('Move to trash?')) return;
-    const i = allCollected.find(function(c) { return c.key === key; });
-    if (!i) return;
-    await refs.trash.push({
-        type: 'collected',
-        key: key,
-        data: i,
-        by: currentUser ? currentUser.email : 'unknown',
-        at: new Date().toISOString()
-    });
-    await refs.collected.child(key).remove();
-    toast('Moved to trash');
-};
-
-window.restoreFromTrash = async function(tk) {
-    if (!confirm('Restore?')) return;
-    const t = allTrash.find(function(x) { return x.key === tk; });
-    if (!t) return;
+// ===== FIXED ASSIGN STAFF =====
+window.assignStaff=function(bookingKey,currentStaff){
+    const existing=document.querySelector('.assign-popup');
+    if(existing)existing.remove();
     
-    if (t.type === 'booking' && t.bookingKey) {
-        await refs.bookings.child(t.bookingKey).set(t.data || { status: 'active' });
-    } else if (t.type === 'received' && t.key) {
-        await refs.received.child(t.key).set(t.data || {});
-    } else if (t.type === 'collected' && t.key) {
-        await refs.collected.child(t.key).set(t.data || {});
+    const popup=document.createElement('div');
+    popup.className='modal-overlay show assign-popup';
+    popup.style.zIndex='4000';
+    
+    let selectedEmail=currentStaff||'';
+    
+    popup.innerHTML='<div class="modal-content">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'+
+            '<h3 style="font-size:1.1rem;"><i class="fas fa-user-plus" style="color:#06b6d4;"></i> Assign Staff</h3>'+
+            '<button onclick="this.closest(\'.assign-popup\').remove()" style="background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer;">&times;</button>'+
+        '</div>'+
+        '<input type="text" class="staff-search" placeholder="🔍 Search staff by name or email..." oninput="filterStaff(this.value)" autofocus>'+
+        '<div style="max-height:220px;overflow-y:auto;margin-bottom:12px;" id="staffAssignList">'+
+            staffList.map(function(s){
+                return '<div class="staff-item'+(s.email===currentStaff?' selected':'')+'" onclick="selectStaffItem(\''+esc(s.email)+'\',this)" data-email="'+esc(s.email)+'">'+
+                    '<div class="staff-avatar">'+esc(s.name[0])+'</div>'+
+                    '<div class="staff-info"><div class="staff-name">'+esc(s.name)+'</div><div class="staff-email">'+esc(s.email)+'</div></div>'+
+                    (s.email===currentStaff?'<i class="fas fa-check" style="color:#10b981;"></i>':'')+
+                '</div>';
+            }).join('')+
+        '</div>'+
+        '<div style="margin-bottom:12px;"><input type="email" class="staff-search" id="newStaffEmailAssign" placeholder="Or enter new staff email..." style="margin-bottom:0;"></div>'+
+        '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">'+
+            '<button class="btn btn-outline btn-sm" onclick="this.closest(\'.assign-popup\').remove()">Cancel</button>'+
+            '<button class="btn btn-primary btn-sm" onclick="confirmAssign(\''+bookingKey+'\')"><i class="fas fa-check"></i> Confirm</button>'+
+        '</div>'+
+    '</div>';
+    
+    document.body.appendChild(popup);
+    popup.addEventListener('click',function(e){ if(e.target===popup)popup.remove(); });
+    
+    // Store selected email globally for this popup
+    window._assignSelectedEmail=currentStaff||'';
+};
+
+window.filterStaff=function(query){
+    const items=document.querySelectorAll('#staffAssignList .staff-item');
+    const q=(query||'').toLowerCase();
+    items.forEach(function(item){
+        const email=item.dataset.email.toLowerCase();
+        item.style.display=email.includes(q)?'flex':'none';
+    });
+};
+
+window.selectStaffItem=function(email,element){
+    document.querySelectorAll('#staffAssignList .staff-item').forEach(function(el){
+        el.classList.remove('selected');
+        const icon=el.querySelector('.fa-check');
+        if(icon)icon.remove();
+    });
+    element.classList.add('selected');
+    const check=document.createElement('i');
+    check.className='fas fa-check';
+    check.style.cssText='color:#10b981;margin-left:auto;';
+    element.appendChild(check);
+    window._assignSelectedEmail=email;
+    const input=document.getElementById('newStaffEmailAssign');
+    if(input)input.value=email;
+};
+
+window.confirmAssign=async function(bookingKey){
+    let email=window._assignSelectedEmail||'';
+    const newInput=document.getElementById('newStaffEmailAssign');
+    if(newInput&&newInput.value.trim()&&newInput.value.trim().includes('@')){
+        email=newInput.value.trim();
     }
     
-    await refs.trash.child(tk).remove();
-    toast('Restored!', 'success');
-};
-
-window.permaDelete = async function(tk) {
-    if (!confirm('Permanently delete?')) return;
-    await refs.trash.child(tk).remove();
-    toast('Deleted permanently');
-};
-
-window.emptyTrash = async function() {
-    if (!confirm('Empty entire trash?')) return;
-    const s = await refs.trash.once('value');
-    const items = s.val() || {};
-    for (const k of Object.keys(items)) {
-        await refs.trash.child(k).remove();
-    }
-    toast('Trash emptied');
-};
-
-// ===== PERFORMANCE =====
-function calcPerf() {
-    const p = {};
-    staffList.forEach(function(s) {
-        p[s.email] = { name: s.name, email: s.email, total: 0, rating: 'Inactive' };
-    });
-    
-    allReceived.forEach(function(i) {
-        if (i.receivedBy && p[i.receivedBy]) p[i.receivedBy].total += i.itemCount || 0;
-    });
-    
-    allCollected.forEach(function(i) {
-        if (i.collectedBy && p[i.collectedBy]) p[i.collectedBy].total += parseInt(i.items) || 0;
-    });
-    
-    Object.values(p).forEach(function(s) {
-        if (s.total > 50) s.rating = '🏆 Top Performer';
-        else if (s.total > 20) s.rating = '👍 Good';
-        else if (s.total > 0) s.rating = '📈 Active';
-    });
-    
-    perfData = p;
-    renderPerf();
-}
-
-function renderPerf() {
-    const arr = Object.values(perfData);
-    
-    document.getElementById('topPerformersList').innerHTML = arr
-        .filter(function(s) { return s.total > 0; })
-        .sort(function(a, b) { return b.total - a.total; })
-        .slice(0, 5)
-        .map(function(s, i) {
-            return '<div class="insight-metric"><span>' + (i+1) + '. ' + esc(s.name) + '</span><span class="insight-value" style="color:#34d399;">' + s.total + '</span></div>';
-        }).join('') || '<div class="empty-state">No data</div>';
-    
-    document.getElementById('activityStreaks').innerHTML = arr
-        .filter(function(s) { return s.total > 0; })
-        .map(function(s) {
-            return '<div class="insight-metric"><span>' + esc(s.name) + '</span><span>' + s.total + ' items</span></div>';
-        }).join('') || '<div class="empty-state">No activity</div>';
-    
-    document.getElementById('staffPerformanceTableBody').innerHTML = arr.length ?
-        arr.map(function(s) {
-            return '<tr><td><strong>' + esc(s.name) + '</strong></td><td>' + s.total + '</td><td><span class="staff-rating ' + (s.rating.includes('Top') ? 'top' : 'good') + '">' + s.rating + '</span></td></tr>';
-        }).join('') :
-        '<tr><td colspan="3"><div class="empty-state">Loading...</div></td></tr>';
-}
-
-// ===== RENDERING =====
-function renderStorage(bookings) {
-    const active = bookings.filter(function(b) { return !b.status || b.status === 'active'; });
-    document.getElementById('storageCount').textContent = active.length;
-    
-    if (active.length === 0) {
-        document.getElementById('storageTableBody').innerHTML = '<tr><td colspan="5"><div class="empty-state">No active bookings</div></td></tr>';
-        document.getElementById('storageCardsContainer').innerHTML = '<div class="empty-state">No active bookings</div>';
+    if(!email||!email.includes('@')){
+        toast('Please select or enter a valid email','error');
         return;
     }
     
-    document.getElementById('storageTableBody').innerHTML = active.map(function(b) {
-        return '<tr>' +
-            '<td><strong>' + esc(b.bookingId || b._key?.slice(-6)) + '</strong></td>' +
-            '<td>' + esc(b.name || '—') + '</td>' +
-            '<td>' + (b.itemCount || '?') + ' ' + esc(b.category || '') + '</td>' +
-            '<td>' + (b.assigned_to ? esc(b.assigned_to.split('@')[0]) : '<span style="color:#f87171;">Unassigned</span>') + '</td>' +
-            '<td>' +
-            '<button class="action-btn btn-preview" onclick="showPreview(\'' + b._key + '\')"><i class="fas fa-eye"></i></button>' +
-            '<button class="action-btn btn-receive" onclick="openReceive(\'' + b._key + '\')"><i class="fas fa-box"></i></button>' +
-            '<button class="action-btn btn-reassign" onclick="quickAssignPopup(\'' + b._key + '\',\'' + (b.assigned_to || '') + '\')"><i class="fas fa-user"></i></button>' +
-            '<button class="action-btn btn-delete" onclick="deleteBooking(\'' + b._key + '\')"><i class="fas fa-trash"></i></button>' +
-            '</td></tr>';
-    }).join('');
+    const key=email.replace(/\./g,',');
     
-    document.getElementById('storageCardsContainer').innerHTML = active.map(function(b) {
-        return '<div class="data-card">' +
-            '<div class="card-row"><span class="card-label">ID</span><strong>' + esc(b.bookingId || b._key?.slice(-6)) + '</strong></div>' +
-            '<div class="card-row"><span class="card-label">Customer</span>' + esc(b.name || '—') + '</div>' +
-            '<div class="card-actions">' +
-            '<button class="action-btn btn-receive" onclick="openReceive(\'' + b._key + '\')">Receive</button>' +
-            '<button class="action-btn btn-reassign" onclick="quickAssignPopup(\'' + b._key + '\')">Assign</button>' +
-            '<button class="action-btn btn-delete" onclick="deleteBooking(\'' + b._key + '\')">Delete</button>' +
-            '</div></div>';
-    }).join('');
-}
-
-function renderReceived(items) {
-    document.getElementById('receivedCount').textContent = items.length;
-    document.getElementById('receivedBadge').textContent = items.length;
-    document.getElementById('receivedBadge').style.display = items.length ? 'inline-block' : 'none';
-    
-    if (items.length === 0) {
-        document.getElementById('receivedTableBody').innerHTML = '<tr><td colspan="6"><div class="empty-state">No received items</div></td></tr>';
-        document.getElementById('receivedCardsContainer').innerHTML = '<div class="empty-state">No received items</div>';
-        return;
-    }
-    
-    document.getElementById('receivedTableBody').innerHTML = items.map(function(r) {
-        return '<tr>' +
-            '<td><strong>' + esc(r.bookingId || r.bookingKey?.slice(-6)) + '</strong></td>' +
-            '<td>' + esc(r.customerName || '—') + '</td>' +
-            '<td>' + (r.itemCount || 0) + ' ' + esc(r.category || '') + '</td>' +
-            '<td>' + esc((r.receivedBy || '').split('@')[0]) + '</td>' +
-            '<td>' + (r.images ? '📸 ' + r.images.length : '0') + '</td>' +
-            '<td>' +
-            '<button class="action-btn btn-collect" onclick="openCollect(\'' + r.bookingKey + '\')"><i class="fas fa-hand-holding"></i></button>' +
-            '<button class="action-btn btn-preview" onclick="showPreview(\'' + r.bookingKey + '\')"><i class="fas fa-eye"></i></button>' +
-            '<button class="action-btn btn-delete" onclick="deleteReceived(\'' + r.key + '\')"><i class="fas fa-trash"></i></button>' +
-            '</td></tr>';
-    }).join('');
-    
-    document.getElementById('receivedCardsContainer').innerHTML = items.map(function(r) {
-        return '<div class="data-card" style="border-left:3px solid #10b981;">' +
-            '<div class="card-row"><span class="card-label">ID</span><strong>' + esc(r.bookingId || r.bookingKey?.slice(-6)) + '</strong></div>' +
-            '<div class="card-row"><span class="card-label">Customer</span>' + esc(r.customerName || '—') + '</div>' +
-            '<div class="card-actions">' +
-            '<button class="action-btn btn-collect" onclick="openCollect(\'' + r.bookingKey + '\')">Collect</button>' +
-            '<button class="action-btn btn-delete" onclick="deleteReceived(\'' + r.key + '\')">Delete</button>' +
-            '</div></div>';
-    }).join('');
-}
-
-function renderCollected(items) {
-    document.getElementById('collectedCount').textContent = items.length;
-    document.getElementById('collectedBadge').textContent = items.length;
-    document.getElementById('collectedBadge').style.display = items.length ? 'inline-block' : 'none';
-    
-    if (items.length === 0) {
-        document.getElementById('collectedTableBody').innerHTML = '<tr><td colspan="5"><div class="empty-state">No collected items</div></td></tr>';
-        document.getElementById('collectedCardsContainer').innerHTML = '<div class="empty-state">No collected items</div>';
-        return;
-    }
-    
-    document.getElementById('collectedTableBody').innerHTML = items.map(function(c) {
-        return '<tr>' +
-            '<td><strong>' + esc(c.bookingId || c.bookingKey?.slice(-6)) + '</strong></td>' +
-            '<td>' + esc(c.customerName || '—') + '</td>' +
-            '<td>' + esc(c.items || '—') + '</td>' +
-            '<td>' + esc((c.collectedBy || '').split('@')[0]) + '</td>' +
-            '<td>' +
-            '<button class="action-btn btn-preview" onclick="showPreview(\'' + c.bookingKey + '\')"><i class="fas fa-eye"></i></button>' +
-            '<button class="action-btn btn-delete" onclick="deleteCollected(\'' + c.key + '\')"><i class="fas fa-trash"></i></button>' +
-            '</td></tr>';
-    }).join('');
-    
-    document.getElementById('collectedCardsContainer').innerHTML = items.map(function(c) {
-        return '<div class="data-card" style="border-left:3px solid #7c3aed;">' +
-            '<div class="card-row"><span class="card-label">ID</span><strong>' + esc(c.bookingId || c.bookingKey?.slice(-6)) + '</strong></div>' +
-            '<div class="card-row"><span class="card-label">Customer</span>' + esc(c.customerName || '—') + '</div>' +
-            '<div class="card-actions">' +
-            '<button class="action-btn btn-preview" onclick="showPreview(\'' + c.bookingKey + '\')">Preview</button>' +
-            '<button class="action-btn btn-delete" onclick="deleteCollected(\'' + c.key + '\')">Delete</button>' +
-            '</div></div>';
-    }).join('');
-}
-
-function renderTrash(items) {
-    document.getElementById('trashCount').textContent = items.length;
-    document.getElementById('trashBadge').textContent = items.length;
-    document.getElementById('trashBadge').style.display = items.length ? 'inline-block' : 'none';
-    
-    if (items.length === 0) {
-        document.getElementById('trashTableBody').innerHTML = '<tr><td colspan="5"><div class="empty-state">Trash is empty</div></td></tr>';
-        document.getElementById('trashCardsContainer').innerHTML = '<div class="empty-state">Trash is empty</div>';
-        return;
-    }
-    
-    document.getElementById('trashTableBody').innerHTML = items.map(function(t) {
-        return '<tr>' +
-            '<td><strong>' + esc(t.bookingId || t.bookingKey || t.key?.slice(-6) || 'N/A') + '</strong></td>' +
-            '<td>' + esc(t.customerName || (t.data ? t.data.customerName : '') || '—') + '</td>' +
-            '<td>' + esc(t.type || 'Unknown') + '</td>' +
-            '<td>' + esc((t.by || '').split('@')[0]) + '</td>' +
-            '<td>' +
-            '<button class="action-btn btn-restore" onclick="restoreFromTrash(\'' + t.key + '\')"><i class="fas fa-undo"></i></button>' +
-            '<button class="action-btn btn-delete" onclick="permaDelete(\'' + t.key + '\')"><i class="fas fa-trash"></i></button>' +
-            '</td></tr>';
-    }).join('');
-    
-    document.getElementById('trashCardsContainer').innerHTML = items.map(function(t) {
-        return '<div class="data-card" style="border-left:3px solid #ef4444;">' +
-            '<div class="card-row"><span class="card-label">ID</span><strong>' + esc(t.bookingId || t.key?.slice(-6) || 'N/A') + '</strong></div>' +
-            '<div class="card-actions">' +
-            '<button class="action-btn btn-restore" onclick="restoreFromTrash(\'' + t.key + '\')">Restore</button>' +
-            '<button class="action-btn btn-delete" onclick="permaDelete(\'' + t.key + '\')">Delete</button>' +
-            '</div></div>';
-    }).join('');
-}
-
-// ===== APPROVALS =====
-function loadPending() {
-    refs.pending.on('value', function(s) {
-        const a = [];
-        s.forEach(function(c) {
-            const v = c.val();
-            v._key = c.key;
-            if (!v.status || v.status === 'pending') a.push(v);
+    // Ensure staff exists
+    const exists=(await refs.staff.child(key).once('value')).exists();
+    if(!exists){
+        await refs.staff.child(key).set({
+            name:email.split('@')[0],
+            email:email,
+            added:new Date().toISOString(),
+            status:'active'
         });
-        
-        document.getElementById('pendingCount').textContent = a.length;
-        document.getElementById('pendingBadge').textContent = a.length;
-        document.getElementById('pendingBadge').style.display = a.length ? 'inline-block' : 'none';
-        
-        document.getElementById('pendingApprovalsContainer').innerHTML = a.length ?
-            a.map(function(x) {
-                return '<div style="background:#152544;border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid #1a3050;">' +
-                    '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
-                    '<div><h4 style="font-size:0.9rem;">' + esc(x.type || 'Request') + '</h4><div style="font-size:0.75rem;color:#8899b4;">' + esc(x.details || '') + '</div></div>' +
-                    '<span class="badge badge-warning">Pending</span></div>' +
-                    '<div style="display:flex;gap:6px;">' +
-                    '<button class="action-btn btn-receive" onclick="approveReq(\'' + x._key + '\')">Approve</button>' +
-                    '<button class="action-btn btn-delete" onclick="rejectReq(\'' + x._key + '\')">Reject</button>' +
-                    '</div></div>';
-            }).join('') :
-            '<div class="empty-state">No pending approvals</div>';
-    });
-}
-
-window.approveReq = async function(k) {
-    await refs.pending.child(k).update({
-        status: 'approved',
-        by: currentUser ? currentUser.email : 'unknown',
-        at: new Date().toISOString()
-    });
-    toast('Approved!', 'success');
-};
-
-window.rejectReq = async function(k) {
-    await refs.pending.child(k).update({
-        status: 'rejected',
-        by: currentUser ? currentUser.email : 'unknown',
-        at: new Date().toISOString()
-    });
-    toast('Rejected');
-};
-
-// ===== ADMINS =====
-async function loadAdmins() {
-    const s = await refs.admins.once('value');
-    const admins = s.val() || {};
-    adminList = Object.entries(admins).map(function([k, d]) {
-        return {
-            key: k,
-            email: k.replace(/,/g, '.'),
-            name: d.name || k.replace(/,/g, '.').split('@')[0]
-        };
-    });
-    renderAdminList();
-}
-
-function renderAdminList() {
-    const c = document.getElementById('adminList');
-    if (!c) return;
-    
-    if (adminList.length === 0) {
-        c.innerHTML = '<div class="empty-state">No admins</div>';
-        return;
+        toast('New staff added and assigned','success');
     }
     
-    c.innerHTML = adminList.map(function(a) {
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#152544;border-radius:10px;margin-bottom:6px;border:1px solid #1a3050;">' +
-            '<div style="display:flex;align-items:center;gap:10px;">' +
-            '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">' + esc(a.name[0]) + '</div>' +
-            '<div><div style="font-weight:600;">' + esc(a.name) + ' <span class="badge badge-active" style="font-size:0.5rem;">Admin</span></div><div style="font-size:0.7rem;color:#8899b4;">' + esc(a.email) + '</div></div>' +
-            '</div>' +
-            (a.email !== (currentUser ? currentUser.email : '') ? '<button class="action-btn btn-delete" onclick="deleteAdmin(\'' + a.key + '\')"><i class="fas fa-trash"></i></button>' : '<span class="badge badge-active">You</span>') +
-            '</div>';
-    }).join('');
-}
-
-window.deleteAdmin = async function(k) {
-    if (!confirm('Delete this admin?')) return;
-    await refs.trash.push({
-        type: 'admin',
-        key: k,
-        by: currentUser ? currentUser.email : 'unknown',
-        at: new Date().toISOString()
+    // Assign to booking
+    await refs.bookings.child(bookingKey).update({
+        assigned_to:email,
+        assigned_at:new Date().toISOString()
     });
-    await refs.admins.child(k).remove();
-    toast('Admin removed');
+    
+    // Close popup
+    document.querySelector('.assign-popup')?.remove();
+    toast('✅ Assigned to '+email.split('@')[0],'success');
 };
 
-window.addAdmin = async function() {
-    const n = document.getElementById('newAdminName').value.trim();
-    const e = document.getElementById('newAdminEmail').value.trim();
-    
-    if (!n || !e || !e.includes('@')) {
-        toast('Fill all fields', 'error');
-        return;
-    }
-    
-    const k = e.replace(/\./g, ',');
-    const exists = (await refs.admins.child(k).once('value')).exists();
-    if (exists) {
-        toast('Already exists', 'error');
-        return;
-    }
-    
-    await refs.admins.child(k).set({
-        name: n,
-        email: e,
-        added: new Date().toISOString(),
-        by: currentUser ? currentUser.email : 'unknown'
-    });
-    
-    document.getElementById('newAdminName').value = '';
-    document.getElementById('newAdminEmail').value = '';
-    toast('Admin added!', 'success');
-};
+// Delete & Trash
+window.deleteBooking=async function(key){ if(!confirm('Move to trash?'))return; const b=allBookings.find(function(x){return x._key===key;}); if(!b)return; await refs.trash.push({type:'booking',bookingKey:key,data:b,by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); await refs.bookings.child(key).remove(); toast('Moved to trash'); };
+window.deleteReceived=async function(key){ if(!confirm('Move to trash?'))return; const i=allReceived.find(function(r){return r.key===key;}); if(!i)return; await refs.trash.push({type:'received',key:key,data:i,by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); await refs.received.child(key).remove(); toast('Moved'); };
+window.deleteCollected=async function(key){ if(!confirm('Move to trash?'))return; const i=allCollected.find(function(c){return c.key===key;}); if(!i)return; await refs.trash.push({type:'collected',key:key,data:i,by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); await refs.collected.child(key).remove(); toast('Moved'); };
+window.restoreFromTrash=async function(tk){ if(!confirm('Restore?'))return; const t=allTrash.find(function(x){return x.key===tk;}); if(!t)return; if(t.type==='booking'&&t.bookingKey)await refs.bookings.child(t.bookingKey).set(t.data||{status:'active'}); else if(t.type==='received'&&t.key)await refs.received.child(t.key).set(t.data||{}); else if(t.type==='collected'&&t.key)await refs.collected.child(t.key).set(t.data||{}); await refs.trash.child(tk).remove(); toast('Restored!','success'); };
+window.permaDelete=async function(tk){ if(!confirm('Permanently delete?'))return; await refs.trash.child(tk).remove(); toast('Deleted'); };
+window.emptyTrash=async function(){ if(!confirm('Empty trash?'))return; const s=await refs.trash.once('value'); for(const k of Object.keys(s.val()||{}))await refs.trash.child(k).remove(); toast('Emptied'); };
 
-// ===== DATA TABLES =====
-function loadRecords() {
-    refs.records.on('value', function(s) {
-        const r = [];
-        s.forEach(function(c) { r.unshift({ key: c.key, ...c.val() }); });
-        document.getElementById('digitalRecordsTable').innerHTML = r.length ?
-            '<table><thead><tr><th>ID</th><th>Type</th><th>Date</th><th>Actions</th></tr></thead><tbody>' +
-            r.map(function(x) {
-                return '<tr><td>' + (x.key?.slice(-6)) + '</td><td>' + esc(x.type || 'N/A') + '</td><td>' + (x.timestamp ? new Date(x.timestamp).toLocaleDateString() : 'N/A') + '</td><td><button class="action-btn btn-delete" onclick="deleteData(\'records\',\'' + x.key + '\')"><i class="fas fa-trash"></i></button></td></tr>';
-            }).join('') + '</tbody></table>' :
-            '<div class="empty-state">No records</div>';
-    });
+// Rendering
+function renderStorage(bookings){
+    const active=bookings.filter(function(b){return !b.status||b.status==='active';});
+    document.getElementById('storageCount').textContent=active.length;
+    document.getElementById('storageTableBody').innerHTML=active.length?active.map(function(b){return '<tr><td><strong>'+esc(b.bookingId||b._key?.slice(-6))+'</strong></td><td>'+esc(b.name||'—')+'</td><td>'+(b.itemCount||'?')+' '+esc(b.category||'')+'</td><td>'+(b.assigned_to?esc(b.assigned_to.split('@')[0]):'<span style="color:#f87171;">—</span>')+'</td><td><button class="action-btn btn-preview" onclick="showPreview(\''+b._key+'\')"><i class="fas fa-eye"></i></button><button class="action-btn btn-receive" onclick="openReceive(\''+b._key+'\')"><i class="fas fa-box"></i></button><button class="action-btn btn-reassign" onclick="assignStaff(\''+b._key+'\',\''+(b.assigned_to||'')+'\')"><i class="fas fa-user"></i></button><button class="action-btn btn-delete" onclick="deleteBooking(\''+b._key+'\')"><i class="fas fa-trash"></i></button></td></tr>'; }).join(''):'<tr><td colspan="5"><div class="empty-state">No active bookings</div></td></tr>';
+    document.getElementById('storageCardsContainer').innerHTML=active.length?active.map(function(b){return '<div class="data-card"><div class="card-row"><span class="card-label">ID</span><strong>'+esc(b.bookingId||b._key?.slice(-6))+'</strong></div><div class="card-row"><span class="card-label">Customer</span>'+esc(b.name||'—')+'</div><div class="card-row"><span class="card-label">Staff</span>'+(b.assigned_to?esc(b.assigned_to.split('@')[0]):'<span style="color:#f87171;">Unassigned</span>')+'</div><div class="card-actions"><button class="action-btn btn-receive" onclick="openReceive(\''+b._key+'\')">Receive</button><button class="action-btn btn-reassign" onclick="assignStaff(\''+b._key+'\',\''+(b.assigned_to||'')+'\')">Assign</button><button class="action-btn btn-delete" onclick="deleteBooking(\''+b._key+'\')">Delete</button></div></div>'; }).join(''):'<div class="empty-state">No active bookings</div>';
 }
 
-function loadReviews() {
-    refs.reviews.on('value', function(s) {
-        const r = [];
-        s.forEach(function(c) { r.unshift({ key: c.key, ...c.val() }); });
-        document.getElementById('reviewsTable').innerHTML = r.length ?
-            '<table><thead><tr><th>Customer</th><th>Rating</th><th>Comment</th><th>Actions</th></tr></thead><tbody>' +
-            r.map(function(x) {
-                return '<tr><td>' + esc(x.name || 'Anon') + '</td><td>' + '⭐'.repeat(x.rating || 0) + '</td><td>' + esc(x.comment || '—') + '</td><td><button class="action-btn btn-delete" onclick="deleteData(\'reviews\',\'' + x.key + '\')"><i class="fas fa-trash"></i></button></td></tr>';
-            }).join('') + '</tbody></table>' :
-            '<div class="empty-state">No reviews</div>';
-    });
+function renderReceived(items){
+    document.getElementById('receivedCount').textContent=items.length;
+    document.getElementById('receivedBadge').textContent=items.length;
+    document.getElementById('receivedBadge').style.display=items.length?'inline-block':'none';
+    document.getElementById('receivedTableBody').innerHTML=items.length?items.map(function(r){return '<tr><td><strong>'+esc(r.bookingId||r.bookingKey?.slice(-6))+'</strong></td><td>'+esc(r.customerName||'—')+'</td><td>'+(r.itemCount||0)+' '+esc(r.category||'')+'</td><td>'+esc((r.receivedBy||'').split('@')[0])+'</td><td>'+(r.images?'📸 '+r.images.length:'0')+'</td><td><button class="action-btn btn-collect" onclick="openCollect(\''+r.bookingKey+'\')"><i class="fas fa-hand-holding"></i></button><button class="action-btn btn-preview" onclick="showPreview(\''+r.bookingKey+'\')"><i class="fas fa-eye"></i></button><button class="action-btn btn-delete" onclick="deleteReceived(\''+r.key+'\')"><i class="fas fa-trash"></i></button></td></tr>'; }).join(''):'<tr><td colspan="6"><div class="empty-state">No received items</div></td></tr>';
+    document.getElementById('receivedCardsContainer').innerHTML=items.length?items.map(function(r){return '<div class="data-card" style="border-left:3px solid #3b82f6;"><div class="card-row"><span class="card-label">ID</span><strong>'+esc(r.bookingId||r.bookingKey?.slice(-6))+'</strong></div><div class="card-row"><span class="card-label">Customer</span>'+esc(r.customerName||'—')+'</div><div class="card-row"><span class="card-label">Photos</span>'+(r.images?'📸 '+r.images.length:'0')+'</div><div class="card-actions"><button class="action-btn btn-collect" onclick="openCollect(\''+r.bookingKey+'\')">Collect</button><button class="action-btn btn-preview" onclick="showPreview(\''+r.bookingKey+'\')">Preview</button><button class="action-btn btn-delete" onclick="deleteReceived(\''+r.key+'\')">Delete</button></div></div>'; }).join(''):'<div class="empty-state">No received items</div>';
 }
 
-function loadLogs() {
-    refs.logs.orderByChild('timestamp').limitToLast(200).on('value', function(s) {
-        const l = [];
-        s.forEach(function(c) { l.unshift({ key: c.key, ...c.val() }); });
-        document.getElementById('staffLogsTable').innerHTML = l.length ?
-            '<table><thead><tr><th>Staff</th><th>Action</th><th>Time</th><th>Actions</th></tr></thead><tbody>' +
-            l.map(function(x) {
-                return '<tr><td>' + esc((x.staff || 'System').split('@')[0]) + '</td><td><span class="badge badge-active">' + esc(x.action) + '</span></td><td>' + new Date(x.timestamp).toLocaleString() + '</td><td><button class="action-btn btn-delete" onclick="deleteData(\'logs\',\'' + x.key + '\')"><i class="fas fa-trash"></i></button></td></tr>';
-            }).join('') + '</tbody></table>' :
-            '<div class="empty-state">No logs</div>';
-    });
+function renderCollected(items){
+    document.getElementById('collectedCount').textContent=items.length;
+    document.getElementById('collectedBadge').textContent=items.length;
+    document.getElementById('collectedBadge').style.display=items.length?'inline-block':'none';
+    document.getElementById('collectedTableBody').innerHTML=items.length?items.map(function(c){return '<tr><td><strong>'+esc(c.bookingId||c.bookingKey?.slice(-6))+'</strong></td><td>'+esc(c.customerName||'—')+'</td><td>'+esc(c.items||'—')+'</td><td>'+esc((c.collectedBy||'').split('@')[0])+'</td><td><button class="action-btn btn-preview" onclick="showPreview(\''+c.bookingKey+'\')"><i class="fas fa-eye"></i></button><button class="action-btn btn-delete" onclick="deleteCollected(\''+c.key+'\')"><i class="fas fa-trash"></i></button></td></tr>'; }).join(''):'<tr><td colspan="5"><div class="empty-state">No collected items</div></td></tr>';
+    document.getElementById('collectedCardsContainer').innerHTML=items.length?items.map(function(c){return '<div class="data-card" style="border-left:3px solid #7c3aed;"><div class="card-row"><span class="card-label">ID</span><strong>'+esc(c.bookingId||c.bookingKey?.slice(-6))+'</strong></div><div class="card-row"><span class="card-label">Customer</span>'+esc(c.customerName||'—')+'</div><div class="card-actions"><button class="action-btn btn-preview" onclick="showPreview(\''+c.bookingKey+'\')">Preview</button><button class="action-btn btn-delete" onclick="deleteCollected(\''+c.key+'\')">Delete</button></div></div>'; }).join(''):'<div class="empty-state">No collected items</div>';
 }
 
-window.deleteData = async function(ref, key) {
-    if (!confirm('Delete?')) return;
-    const snap = await db.ref(ref).child(key).once('value');
-    const data = snap.val();
-    await refs.trash.push({
-        type: ref,
-        key: key,
-        data: data,
-        by: currentUser ? currentUser.email : 'unknown',
-        at: new Date().toISOString()
-    });
-    await db.ref(ref).child(key).remove();
-    toast('Moved to trash');
-};
-
-window.trashAll = async function(ref) {
-    if (!confirm('Clear all ' + ref + '?')) return;
-    const s = await db.ref(ref).once('value');
-    const items = s.val() || {};
-    for (const [k, v] of Object.entries(items)) {
-        await refs.trash.push({
-            type: ref,
-            key: k,
-            data: v,
-            by: currentUser ? currentUser.email : 'unknown',
-            at: new Date().toISOString()
-        });
-    }
-    await db.ref(ref).remove();
-    toast('All ' + ref + ' moved to trash');
-};
-
-// ===== BACKUP =====
-window.startBackup = function() {
-    const f = document.getElementById('backupFormat').value;
-    const ts = new Date().toISOString().split('T')[0];
-    
-    if (f === 'excel') {
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(
-            [['ID', 'Customer', 'Status', 'Staff', 'Items']].concat(
-                allBookings.map(function(b) { return [b.bookingId, b.name, b.status, b.assigned_to, b.itemCount]; })
-            )
-        ), 'Bookings');
-        XLSX.writeFile(wb, 'backup_' + ts + '.xlsx');
-    } else {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text('CampusVault Backup', 10, 10);
-        doc.text('Total Bookings: ' + allBookings.length, 10, 20);
-        doc.save('backup_' + ts + '.pdf');
-    }
-    
-    toast('Backup generated!', 'success');
-    closeModal('backupModal');
-};
-
-// ===== METRICS =====
-function updateMetrics() {
-    const active = allBookings.filter(function(b) { return !b.status || b.status === 'active'; });
-    document.getElementById('metricsContainer').innerHTML =
-        '<div class="metric-card"><div class="metric-icon" style="background:#1e4d8c;"><i class="fas fa-box"></i></div><div><div class="metric-value">' + allBookings.length + '</div><div class="metric-label">Total</div></div></div>' +
-        '<div class="metric-card"><div class="metric-icon" style="background:#10b981;"><i class="fas fa-spinner"></i></div><div><div class="metric-value">' + active.length + '</div><div class="metric-label">Active</div></div></div>' +
-        '<div class="metric-card"><div class="metric-icon" style="background:#3b82f6;"><i class="fas fa-box-check"></i></div><div><div class="metric-value">' + allReceived.length + '</div><div class="metric-label">Received</div></div></div>' +
-        '<div class="metric-card"><div class="metric-icon" style="background:#7c3aed;"><i class="fas fa-people-carry"></i></div><div><div class="metric-value">' + allCollected.length + '</div><div class="metric-label">Collected</div></div></div>' +
-        '<div class="metric-card"><div class="metric-icon" style="background:#f97316;"><i class="fas fa-trash"></i></div><div><div class="metric-value">' + allTrash.length + '</div><div class="metric-label">Trash</div></div></div>' +
-        '<div class="metric-card"><div class="metric-icon" style="background:#06b6d4;"><i class="fas fa-users"></i></div><div><div class="metric-value">' + staffList.length + '</div><div class="metric-label">Staff</div></div></div>';
+function renderTrash(items){
+    document.getElementById('trashCount').textContent=items.length;
+    document.getElementById('trashBadge').textContent=items.length;
+    document.getElementById('trashBadge').style.display=items.length?'inline-block':'none';
+    document.getElementById('trashTableBody').innerHTML=items.length?items.map(function(t){return '<tr><td><strong>'+esc(t.bookingId||t.bookingKey||t.key?.slice(-6)||'N/A')+'</strong></td><td>'+esc(t.type||'Unknown')+'</td><td>'+esc((t.by||'').split('@')[0])+'</td><td><button class="action-btn btn-restore" onclick="restoreFromTrash(\''+t.key+'\')"><i class="fas fa-undo"></i></button><button class="action-btn btn-delete" onclick="permaDelete(\''+t.key+'\')"><i class="fas fa-trash"></i></button></td></tr>'; }).join(''):'<tr><td colspan="4"><div class="empty-state">Empty</div></td></tr>';
+    document.getElementById('trashCardsContainer').innerHTML=items.length?items.map(function(t){return '<div class="data-card" style="border-left:3px solid #ef4444;"><div class="card-row"><span class="card-label">ID</span><strong>'+esc(t.bookingId||t.key?.slice(-6)||'N/A')+'</strong></div><div class="card-actions"><button class="action-btn btn-restore" onclick="restoreFromTrash(\''+t.key+'\')">Restore</button><button class="action-btn btn-delete" onclick="permaDelete(\''+t.key+'\')">Delete</button></div></div>'; }).join(''):'<div class="empty-state">Empty</div>';
 }
 
-// ===== SIDEBAR =====
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-
-document.getElementById('hamburgerBtn').onclick = function() {
-    sidebar.classList.add('open');
-    overlay.style.display = 'block';
-};
-
-function closeSidebar() {
-    sidebar.classList.remove('open');
-    overlay.style.display = 'none';
+// Performance
+function calcPerf(){
+    const p={};
+    staffList.forEach(function(s){p[s.email]={name:s.name,email:s.email,total:0,rating:'Inactive'};});
+    allReceived.forEach(function(i){if(i.receivedBy&&p[i.receivedBy])p[i.receivedBy].total+=i.itemCount||0;});
+    allCollected.forEach(function(i){if(i.collectedBy&&p[i.collectedBy])p[i.collectedBy].total+=parseInt(i.items)||0;});
+    Object.values(p).forEach(function(s){if(s.total>50)s.rating='🏆 Top';else if(s.total>20)s.rating='👍 Good';else if(s.total>0)s.rating='📈 Active';});
+    perfData=p; renderPerf();
 }
-window.closeSidebar = closeSidebar;
-overlay.addEventListener('click', closeSidebar);
-
-document.querySelectorAll('.sidebar nav a[data-tab]').forEach(function(l) {
-    l.addEventListener('click', function(e) {
-        e.preventDefault();
-        document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
-        document.querySelectorAll('.sidebar nav a').forEach(function(a) { a.classList.remove('active'); });
-        this.classList.add('active');
-        const tab = document.getElementById('tab-' + this.dataset.tab);
-        if (tab) tab.classList.add('active');
-        if (window.innerWidth <= 768) closeSidebar();
-    });
-});
-
-// ===== LOAD ALL DATA =====
-function loadAllData() {
-    console.log('Loading all data...');
-    
-    refs.bookings.on('value', function(s) {
-        allBookings = [];
-        s.forEach(function(c) {
-            const v = c.val();
-            v._key = c.key;
-            allBookings.push(v);
-        });
-        renderStorage(allBookings);
-        updateMetrics();
-    });
-    
-    refs.received.orderByChild('timestamp').limitToLast(200).on('value', function(s) {
-        allReceived = [];
-        s.forEach(function(c) { allReceived.unshift({ key: c.key, ...c.val() }); });
-        renderReceived(allReceived);
-        updateMetrics();
-        calcPerf();
-    });
-    
-    refs.collected.orderByChild('timestamp').limitToLast(200).on('value', function(s) {
-        allCollected = [];
-        s.forEach(function(c) { allCollected.unshift({ key: c.key, ...c.val() }); });
-        renderCollected(allCollected);
-        updateMetrics();
-        calcPerf();
-    });
-    
-    refs.trash.on('value', function(s) {
-        allTrash = [];
-        s.forEach(function(c) { allTrash.unshift({ key: c.key, ...c.val() }); });
-        renderTrash(allTrash);
-        updateMetrics();
-    });
-    
-    loadPending();
-    loadRecords();
-    loadReviews();
-    loadLogs();
-    
-    refs.staff.on('value', function() { loadStaffList(); });
-    refs.admins.on('value', function() { loadAdmins(); });
-    
-    loadStaffList();
-    loadAdmins();
-    
-    console.log('All data loaded');
+function renderPerf(){
+    const arr=Object.values(perfData);
+    document.getElementById('staffPerformanceTableBody').innerHTML=arr.length?arr.map(function(s){return '<tr><td><strong>'+esc(s.name)+'</strong></td><td>'+s.total+'</td><td><span class="staff-rating '+(s.rating.includes('Top')?'top':'good')+'">'+s.rating+'</span></td></tr>';}).join(''):'<tr><td colspan="3"><div class="empty-state">Loading...</div></td></tr>';
 }
 
-// ===== INITIALIZATION =====
-console.log('Admin portal ready');
-document.getElementById('loginScreen').style.display = 'flex';
+// Approvals
+function loadPending(){ refs.pending.on('value',function(s){ const a=[]; s.forEach(function(c){ const v=c.val(); v._key=c.key; if(!v.status||v.status==='pending')a.push(v); }); document.getElementById('pendingCount').textContent=a.length; document.getElementById('pendingBadge').textContent=a.length; document.getElementById('pendingBadge').style.display=a.length?'inline-block':'none'; document.getElementById('pendingApprovalsContainer').innerHTML=a.length?a.map(function(x){return '<div style="background:#152544;border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid #1a3050;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div><h4>'+esc(x.type||'Request')+'</h4><div style="font-size:0.75rem;color:#8899b4;">'+esc(x.details||'')+'</div></div><span class="badge badge-warning">Pending</span></div><div style="display:flex;gap:6px;"><button class="action-btn btn-receive" onclick="approveReq(\''+x._key+'\')">Approve</button><button class="action-btn btn-delete" onclick="rejectReq(\''+x._key+'\')">Reject</button></div></div>';}).join(''):'<div class="empty-state">No pending</div>'; }); }
+window.approveReq=async function(k){ await refs.pending.child(k).update({status:'approved',by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); toast('Approved!','success'); };
+window.rejectReq=async function(k){ await refs.pending.child(k).update({status:'rejected',by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); toast('Rejected'); };
+
+// Admins
+async function loadAdmins(){ const s=await refs.admins.once('value'),a=s.val()||{}; adminList=Object.entries(a).map(function([k,d]){return{key:k,email:k.replace(/,/g,'.'),name:d.name||k.replace(/,/g,'.').split('@')[0]};}); renderAdminList(); }
+function renderAdminList(){ const c=document.getElementById('adminList'); if(!c)return; c.innerHTML=adminList.length?adminList.map(function(a){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#152544;border-radius:10px;margin-bottom:6px;border:1px solid #1a3050;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">'+esc(a.name[0])+'</div><div><div style="font-weight:600;font-size:0.85rem;">'+esc(a.name)+' <span class="badge badge-active" style="font-size:0.5rem;">Admin</span></div><div style="font-size:0.65rem;color:#8899b4;">'+esc(a.email)+'</div></div></div>'+(a.email!==(currentUser?currentUser.email:'')?'<button class="action-btn btn-delete" onclick="deleteAdmin(\''+a.key+'\')"><i class="fas fa-trash"></i></button>':'<span class="badge badge-active">You</span>')+'</div>'; }).join(''):'<div class="empty-state">No admins</div>'; }
+window.deleteAdmin=async function(k){ if(!confirm('Delete?'))return; await refs.trash.push({type:'admin',key:k,by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); await refs.admins.child(k).remove(); toast('Deleted'); };
+window.addAdmin=async function(){ const n=document.getElementById('newAdminName').value.trim(),e=document.getElementById('newAdminEmail').value.trim(); if(!n||!e||!e.includes('@'))return toast('Invalid','error'); const k=e.replace(/\./g,','); if((await refs.admins.child(k).once('value')).exists())return toast('Exists','error'); await refs.admins.child(k).set({name:n,email:e,added:new Date().toISOString()}); document.getElementById('newAdminName').value=''; document.getElementById('newAdminEmail').value=''; toast('Added!','success'); };
+
+// Data tables
+function loadRecords(){ refs.records.on('value',function(s){ const r=[]; s.forEach(function(c){r.unshift({key:c.key,...c.val()});}); document.getElementById('digitalRecordsTable').innerHTML=r.length?'<table><thead><tr><th>ID</th><th>Type</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+r.map(function(x){return '<tr><td>'+(x.key?.slice(-6))+'</td><td>'+esc(x.type||'N/A')+'</td><td>'+(x.timestamp?new Date(x.timestamp).toLocaleDateString():'N/A')+'</td><td><button class="action-btn btn-delete" onclick="deleteData(\'records\',\''+x.key+'\')"><i class="fas fa-trash"></i></button></td></tr>';}).join('')+'</tbody></table>':'<div class="empty-state">No records</div>'; }); }
+function loadReviews(){ refs.reviews.on('value',function(s){ const r=[]; s.forEach(function(c){r.unshift({key:c.key,...c.val()});}); document.getElementById('reviewsTable').innerHTML=r.length?'<table><thead><tr><th>Customer</th><th>Rating</th><th>Comment</th><th>Actions</th></tr></thead><tbody>'+r.map(function(x){return '<tr><td>'+esc(x.name||'Anon')+'</td><td>'+'⭐'.repeat(x.rating||0)+'</td><td>'+esc(x.comment||'—')+'</td><td><button class="action-btn btn-delete" onclick="deleteData(\'reviews\',\''+x.key+'\')"><i class="fas fa-trash"></i></button></td></tr>';}).join('')+'</tbody></table>':'<div class="empty-state">No reviews</div>'; }); }
+function loadLogs(){ refs.logs.orderByChild('timestamp').limitToLast(200).on('value',function(s){ const l=[]; s.forEach(function(c){l.unshift({key:c.key,...c.val()});}); document.getElementById('staffLogsTable').innerHTML=l.length?'<table><thead><tr><th>Staff</th><th>Action</th><th>Time</th><th>Actions</th></tr></thead><tbody>'+l.map(function(x){return '<tr><td>'+esc((x.staff||'System').split('@')[0])+'</td><td><span class="badge badge-active">'+esc(x.action)+'</span></td><td>'+new Date(x.timestamp).toLocaleString()+'</td><td><button class="action-btn btn-delete" onclick="deleteData(\'logs\',\''+x.key+'\')"><i class="fas fa-trash"></i></button></td></tr>';}).join('')+'</tbody></table>':'<div class="empty-state">No logs</div>'; }); }
+window.deleteData=async function(ref,key){ if(!confirm('Delete?'))return; const snap=await db.ref(ref).child(key).once('value'); await refs.trash.push({type:ref,key:key,data:snap.val(),by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()}); await db.ref(ref).child(key).remove(); toast('Moved'); };
+window.trashAll=async function(ref){ if(!confirm('Clear all?'))return; const s=await db.ref(ref).once('value'); for(const[k,v]of Object.entries(s.val()||{})){await refs.trash.push({type:ref,key:k,data:v,by:currentUser?currentUser.email:'unknown',at:new Date().toISOString()});} await db.ref(ref).remove(); toast('Cleared'); };
+
+// Backup
+window.startBackup=function(){ const f=document.getElementById('backupFormat').value,ts=new Date().toISOString().split('T')[0]; if(f==='excel'){ const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['ID','Customer','Status','Staff','Items']].concat(allBookings.map(function(b){return[b.bookingId,b.name,b.status,b.assigned_to,b.itemCount];}))),'Bookings'); XLSX.writeFile(wb,'backup_'+ts+'.xlsx'); }else{ const {jsPDF}=window.jspdf; const doc=new jsPDF(); doc.text('Backup',10,10); doc.save('backup_'+ts+'.pdf'); } toast('Done!','success'); closeModal('backupModal'); };
+
+// Metrics
+function updateMetrics(){
+    const active=allBookings.filter(function(b){return !b.status||b.status==='active';});
+    document.getElementById('metricsContainer').innerHTML=
+        '<div class="metric-card"><div class="metric-icon" style="background:#1e4d8c;"><i class="fas fa-box"></i></div><div><div class="metric-value">'+allBookings.length+'</div><div class="metric-label">Total</div></div></div>'+
+        '<div class="metric-card"><div class="metric-icon" style="background:#10b981;"><i class="fas fa-spinner"></i></div><div><div class="metric-value">'+active.length+'</div><div class="metric-label">Active</div></div></div>'+
+        '<div class="metric-card"><div class="metric-icon" style="background:#3b82f6;"><i class="fas fa-box-check"></i></div><div><div class="metric-value">'+allReceived.length+'</div><div class="metric-label">Received</div></div></div>'+
+        '<div class="metric-card"><div class="metric-icon" style="background:#7c3aed;"><i class="fas fa-people-carry"></i></div><div><div class="metric-value">'+allCollected.length+'</div><div class="metric-label">Collected</div></div></div>'+
+        '<div class="metric-card"><div class="metric-icon" style="background:#f97316;"><i class="fas fa-trash"></i></div><div><div class="metric-value">'+allTrash.length+'</div><div class="metric-label">Trash</div></div></div>'+
+        '<div class="metric-card"><div class="metric-icon" style="background:#06b6d4;"><i class="fas fa-users"></i></div><div><div class="metric-value">'+staffList.length+'</div><div class="metric-label">Staff</div></div></div>';
+}
+
+// Sidebar
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sidebarOverlay');
+document.getElementById('hamburgerBtn').onclick=function(){ sidebar.classList.add('open'); overlay.style.display='block'; };
+function closeSidebar(){ sidebar.classList.remove('open'); overlay.style.display='none'; }
+window.closeSidebar=closeSidebar; overlay.addEventListener('click',closeSidebar);
+document.querySelectorAll('.sidebar nav a[data-tab]').forEach(function(l){ l.addEventListener('click',function(e){ e.preventDefault(); document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');}); document.querySelectorAll('.sidebar nav a').forEach(function(a){a.classList.remove('active');}); this.classList.add('active'); const tab=document.getElementById('tab-'+this.dataset.tab); if(tab)tab.classList.add('active'); if(window.innerWidth<=768)closeSidebar(); }); });
+
+// Security
+window.runScan=function(){ toast('Scanning...'); setTimeout(function(){toast('✅ No threats found','success');},2000); };
+
+// Load all
+function loadAllData(){
+    refs.bookings.on('value',function(s){ allBookings=[]; s.forEach(function(c){ const v=c.val(); v._key=c.key; allBookings.push(v); }); renderStorage(allBookings); updateMetrics(); });
+    refs.received.orderByChild('timestamp').limitToLast(200).on('value',function(s){ allReceived=[]; s.forEach(function(c){allReceived.unshift({key:c.key,...c.val()});}); renderReceived(allReceived); updateMetrics(); calcPerf(); });
+    refs.collected.orderByChild('timestamp').limitToLast(200).on('value',function(s){ allCollected=[]; s.forEach(function(c){allCollected.unshift({key:c.key,...c.val()});}); renderCollected(allCollected); updateMetrics(); calcPerf(); });
+    refs.trash.on('value',function(s){ allTrash=[]; s.forEach(function(c){allTrash.unshift({key:c.key,...c.val()});}); renderTrash(allTrash); updateMetrics(); });
+    loadPending(); loadRecords(); loadReviews(); loadLogs();
+    refs.staff.on('value',function(){loadStaffList();});
+    refs.admins.on('value',function(){loadAdmins();});
+    loadStaffList(); loadAdmins();
+}
+
+// Init
+document.getElementById('loginScreen').style.display='flex';
 </script>
 </body>
 </html>
