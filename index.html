@@ -800,7 +800,22 @@
     <div class="modal-overlay" id="collectionModal"><div class="modal-content"><h3>Collect Items</h3><form onsubmit="submitCollection(event)"><input type="hidden" id="collectBookingKey"><div class="form-group"><label>Booking ID</label><input type="text" id="collectBookingId" readonly></div><div class="form-group"><label>Customer</label><input type="text" id="collectCustomerName" readonly></div><div class="form-group"><label>Items</label><input type="text" id="collectItems" readonly></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button type="button" class="btn btn-outline" onclick="closeModal('collectionModal')">Cancel</button><button type="submit" class="btn btn-success">Confirm</button></div></form></div></div>
     <div class="modal-overlay" id="backupModal"><div class="modal-content"><h3>Backup</h3><div class="form-group"><label>Format</label><select id="backupFormat"><option value="excel">Excel</option><option value="pdf">PDF</option></select></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button class="btn btn-outline" onclick="closeModal('backupModal')">Cancel</button><button class="btn btn-primary" onclick="startBackup()">Generate</button></div></div></div>
 
-
+<!-- Feedback Modal for Rejection -->
+<div class="feedback-modal" id="feedbackModal" style="display:none;">
+    <div class="feedback-card">
+        <h3><i class="fas fa-comment-dots"></i> Rejection Feedback</h3>
+        <p style="color:#8899b4;font-size:0.85rem;margin-bottom:16px;">
+            Please provide a reason for rejecting this request. This feedback will be shown to the staff member.
+        </p>
+        <textarea class="feedback-textarea" id="feedbackTextarea" placeholder="Explain why this collection request is being rejected..."></textarea>
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+            <button class="btn btn-outline" onclick="closeFeedbackModal()">Cancel</button>
+            <button class="btn-feedback-submit" onclick="submitRejectionWithFeedback()">
+                <i class="fas fa-times"></i> Reject with Feedback
+            </button>
+        </div>
+    </div>
+</div>
 
 
 <script>
@@ -841,6 +856,7 @@ let allBookings = [], allReceived = [], allCollected = [], allTrash = [];
 let allPending = [], staffList = [], perfData = {};
 let selectedImageFile = null;
 let selectedImageDataUrl = null;
+let currentRejectionKey = null;
 
 let securityStats = {
     blockedToday: 0, activeSessions: 0, failedAttempts: 0,
@@ -1578,14 +1594,199 @@ function renderPerf() {
 }
 
 // ===== APPROVALS =====
+//function loadPending() {
+  //  refs.pending.on('value', s => {
+    //    allPending = []; s.forEach(c => { const v = c.val(); v._key = c.key; if (v.status === 'pending') allPending.push(v); });
+        //document.getElementById('pendingBadge').textContent = allPending.length;
+      //  document.getElementById('pendingBadge').style.display = allPending.length ? 'inline-block' : 'none';
+        //document.getElementById('pendingApprovalsContainer').innerHTML = allPending.length ? allPending.map(x => `<div class="card" style="margin-bottom:8px;"><div style="padding:14px;"><h4 style="margin-bottom:8px;">${x.proposed?'Edit':'Collection'} Request • ${x.bookingKey?.slice(-6)}</h4><div style="font-size:0.8rem;color:#8899b4;margin-bottom:10px;">${x.details||'No details'}</div><div style="display:flex;gap:6px;"><button class="action-btn btn-receive" onclick="approveReq('${x._key}')"><i class="fas fa-check"></i> Approve</button><button class="action-btn btn-delete" onclick="rejectReq('${x._key}')"><i class="fas fa-times"></i> Reject</button></div></div></div>`).join('') : '<div class="card"><div class="empty-state">No pending approvals</div></div>';
+    //});
+//}
+
+
 function loadPending() {
     refs.pending.on('value', s => {
-        allPending = []; s.forEach(c => { const v = c.val(); v._key = c.key; if (v.status === 'pending') allPending.push(v); });
-        document.getElementById('pendingBadge').textContent = allPending.length;
-        document.getElementById('pendingBadge').style.display = allPending.length ? 'inline-block' : 'none';
-        document.getElementById('pendingApprovalsContainer').innerHTML = allPending.length ? allPending.map(x => `<div class="card" style="margin-bottom:8px;"><div style="padding:14px;"><h4 style="margin-bottom:8px;">${x.proposed?'Edit':'Collection'} Request • ${x.bookingKey?.slice(-6)}</h4><div style="font-size:0.8rem;color:#8899b4;margin-bottom:10px;">${x.details||'No details'}</div><div style="display:flex;gap:6px;"><button class="action-btn btn-receive" onclick="approveReq('${x._key}')"><i class="fas fa-check"></i> Approve</button><button class="action-btn btn-delete" onclick="rejectReq('${x._key}')"><i class="fas fa-times"></i> Reject</button></div></div></div>`).join('') : '<div class="card"><div class="empty-state">No pending approvals</div></div>';
+        allPending = []; 
+        s.forEach(c => { 
+            const v = c.val(); 
+            v._key = c.key; 
+            allPending.push(v); 
+        });
+        
+        const pendingItems = allPending.filter(a => a.status === 'pending');
+        document.getElementById('pendingBadge').textContent = pendingItems.length;
+        document.getElementById('pendingBadge').style.display = pendingItems.length ? 'inline-block' : 'none';
+        
+        document.getElementById('pendingApprovalsContainer').innerHTML = pendingItems.length ? 
+            pendingItems.map(x => {
+                const booking = allBookings.find(b => b._key === x.bookingKey) || {};
+                return `
+                <div class="card" style="margin-bottom:12px; border-left: 3px solid #f59e0b;">
+                    <div style="padding:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:10px;">
+                            <div>
+                                <h4 style="margin-bottom:4px;">
+                                    ${x.type === 'collection' ? '📦 Collection' : x.type === 'assignment_request' ? '👤 Assignment' : '✏️ Edit'} Request
+                                    ${x.resubmitted ? '<span class="badge badge-pending">RESUBMITTED</span>' : ''}
+                                </h4>
+                                <div style="font-size:0.8rem;color:#8899b4;">
+                                    Booking: <strong>#${x.bookingKey?.slice(-6)}</strong>
+                                    ${booking.name ? ` • Customer: ${booking.name}` : ''}
+                                </div>
+                                <div style="font-size:0.75rem;color:#6b8ab0;margin-top:4px;">
+                                    By: <strong>${x.requestedByName || (x.requestedBy || '').split('@')[0]}</strong>
+                                    • ${formatTimestamp(x.timestamp)}
+                                </div>
+                                ${x.previousRejection ? `
+                                <div style="margin-top:8px;padding:8px;background:rgba(239,68,68,0.1);border-radius:6px;border-left:3px solid #ef4444;">
+                                    <div style="font-size:0.7rem;color:#f87171;font-weight:600;">Previous Rejection:</div>
+                                    <div style="font-size:0.75rem;color:#fca5a5;">"${x.previousRejection}"</div>
+                                </div>` : ''}
+                            </div>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                ${x.type === 'assignment_request' ? 
+                                    `<button class="action-btn btn-approve" onclick="approveAssignment('${x._key}','${x.bookingKey}','${x.requestedBy}')">
+                                        <i class="fas fa-check"></i> Assign
+                                    </button>` : 
+                                    `<button class="action-btn btn-approve" onclick="approveCollection('${x._key}')">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>`
+                                }
+                                <button class="action-btn btn-reject-feedback" onclick="openRejectFeedback('${x._key}')">
+                                    <i class="fas fa-comment"></i> Reject with Feedback
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('') : 
+            '<div class="card"><div class="empty-state">✅ No pending approvals</div></div>';
     });
 }
+
+
+
+
+// ===== FEEDBACK/REJECTION WORKFLOW =====
+window.openRejectFeedback = function(approvalKey) {
+    currentRejectionKey = approvalKey;
+    document.getElementById('feedbackTextarea').value = '';
+    document.getElementById('feedbackModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+};
+
+window.closeFeedbackModal = function() {
+    document.getElementById('feedbackModal').style.display = 'none';
+    document.body.style.overflow = '';
+    currentRejectionKey = null;
+};
+
+window.submitRejectionWithFeedback = async function() {
+    const feedback = document.getElementById('feedbackTextarea').value.trim();
+    if (!feedback) {
+        toast('⚠️ Please provide feedback explaining the rejection');
+        return;
+    }
+    
+    if (!currentRejectionKey) return;
+    
+    const approval = allPending.find(a => a._key === currentRejectionKey);
+    if (approval) {
+        // Update booking to remove pending_collection flag
+        await refs.bookings.child(approval.bookingKey).update({ 
+            pending_collection: false 
+        });
+        
+        // Update approval with rejection details
+        await refs.pending.child(currentRejectionKey).update({ 
+            status: 'rejected', 
+            adminResponse: 'rejected',
+            adminFeedback: feedback,
+            respondedBy: currentUser?.email,
+            respondedAt: new Date().toISOString()
+        });
+        
+        refs.logs.push({
+            staff: currentUser?.email,
+            action: 'rejected_collection',
+            bookingKey: approval.bookingKey,
+            feedback: feedback,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    closeFeedbackModal();
+    toast('❌ Request rejected with feedback');
+};
+
+// ===== APPROVE COLLECTION (with admin response) =====
+window.approveCollection = async function(approvalKey) {
+    if (!confirm('Approve this collection request?')) return;
+    
+    const approval = allPending.find(a => a._key === approvalKey);
+    if (!approval) return;
+    
+    const booking = allBookings.find(b => b._key === approval.bookingKey) || {};
+    
+    await refs.collected.push({
+        bookingKey: approval.bookingKey,
+        bookingId: booking.bookingId || '',
+        customerName: booking.name || '',
+        items: (booking.itemCount || '?') + ' items',
+        customerSignature: approval.customerSignature || '',
+        staffSignature: approval.staffSignature || '',
+        collectedBy: approval.requestedBy,
+        collectedByName: approval.requestedByName,
+        approvedBy: currentUser?.email,
+        timestamp: new Date().toISOString()
+    });
+    
+    await refs.bookings.child(approval.bookingKey).update({ 
+        status: 'collected', 
+        collected_at: new Date().toISOString(), 
+        collection_approved: true,
+        pending_collection: false
+    });
+    
+    await refs.pending.child(approvalKey).update({ 
+        status: 'approved', 
+        adminResponse: 'approved',
+        adminFeedback: 'Collection approved successfully',
+        respondedBy: currentUser?.email,
+        respondedAt: new Date().toISOString()
+    });
+    
+    refs.logs.push({
+        staff: currentUser?.email,
+        action: 'approved_collection',
+        bookingKey: approval.bookingKey,
+        requestedBy: approval.requestedBy,
+        timestamp: new Date().toISOString()
+    });
+    
+    toast('✅ Collection approved!');
+};
+
+// ===== APPROVE ASSIGNMENT (with admin response) =====
+window.approveAssignment = async function(approvalKey, bookingKey, staffEmail) {
+    if (!confirm(`Assign booking to ${staffEmail}?`)) return;
+    
+    await refs.bookings.child(bookingKey).update({ 
+        assigned_to: staffEmail, 
+        assigned_at: new Date().toISOString() 
+    });
+    
+    await refs.pending.child(approvalKey).update({ 
+        status: 'approved', 
+        adminResponse: 'approved',
+        adminFeedback: 'Assignment approved',
+        respondedBy: currentUser?.email,
+        respondedAt: new Date().toISOString()
+    });
+    
+    toast('✅ Assignment approved!');
+};
+
 
 window.approveReq = async (k) => { const a = allPending.find(x => x._key === k); if (a) { await refs.pending.child(k).update({ status: 'approved', approvedBy: currentUser?.email, approvedAt: new Date().toISOString() }); toast('✅ Approved!'); } };
 window.rejectReq = async (k) => { await refs.pending.child(k).update({ status: 'rejected', rejectedBy: currentUser?.email, rejectedAt: new Date().toISOString() }); toast('❌ Rejected'); };
