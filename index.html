@@ -621,6 +621,11 @@
     </style>
 </head>
 <body>
+        <!-- The button is hidden by default until Chrome confirms the app can be installed -->
+<button id="installBtn" style="display: none; padding: 10px 20px; font-size: 16px; cursor: pointer;">
+  📥 Install App
+</button>
+
     <div class="login-overlay" id="loginScreen">
         <div class="login-card">
             <div class="logo"><i class="fas fa-shield-halved"></i></div>
@@ -796,10 +801,6 @@
 
 
 
-    <!-- The button is hidden by default until Chrome confirms the app can be installed -->
-<button id="installBtn" style="display: none; padding: 10px 20px; font-size: 16px; cursor: pointer;">
-  📥 Install App
-</button>
 
 <script>
 // Firebase initialization
