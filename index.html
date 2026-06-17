@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=yes">
+    <title>Admin Portal | CampusVault Secure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a1628; --surface: #0f1f3a; --text: #e2e8f0;
+            --text-secondary: #8899b4; --primary: #1e4d8c;
+            --primary-light: #2563eb; --accent: #06b6d4;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --border: #1a3050; --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --radius: 14px; --radius-sm: 10px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; height: 100%; }
+        body {
+            font-family: var(--font); background: var(--bg); color: var(--text);
+            font-size: 15px; line-height: 1.5; min-height: 100vh;
+            padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
+            -webkit-tap-highlight-color: transparent;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1a3050; border-radius: 4px; }
+
+        .login-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #060f1e 0%, #0a1628 30%, #1e4d8c 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; padding: 20px;
+        }
+        .login-card {
+            background: #0f1f3a; border-radius: 24px;
+            padding: 40px 28px; width: 100%; max-width: 420px;
+            text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            border: 1px solid #1a3050;
+        }
+        .login-card .logo {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #1e4d8c, #06b6d4);
+            border-radius: 18px; display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 1.8rem; color: #fff; margin-bottom: 16px;
+        }
+        .login-card h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+        .login-card .subtitle { color: #8899b4; font-size: 0.9rem; margin-bottom: 28px; }
+        .google-btn {
+            width: 100%; padding: 16px 20px; border-radius: 14px;
+            border: 2px solid #1a3050; background: #152544;
+            font-weight: 700; display: flex; align-items: center; justify-content: center;
+            gap: 12px; cursor: pointer; font-size: 1rem; min-height: 54px;
+            color: #e2e8f0; transition: all 0.2s;
+        }
+        .google-btn:hover { border-color: #1e4d8c; background: #1a3050; }
+        .google-btn:active { transform: scale(0.97); }
+        .google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .login-error { color: #ef4444; margin-top: 16px; display: none; font-size: 0.9rem; font-weight: 600; padding: 10px; background: rgba(239,68,68,0.1); border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); }
+
+        .dashboard { display: none; }
+        .dashboard.active { display: flex; min-height: 100vh; }
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; }
+        .sidebar-overlay.active { display: block; }
+        .sidebar {
+            width: 280px; background: #060f1e; color: #e2e8f0;
+            position: fixed; top: 0; left: 0; height: 100vh; z-index: 250;
+            transition: transform 0.3s; overflow-y: auto;
+            display: flex; flex-direction: column;
+            padding-top: var(--safe-top); font-size: 0.9rem;
+            border-right: 1px solid #1a3050;
+        }
+        .sidebar .brand {
+            padding: 20px 18px; font-weight: 800; font-size: 1.2rem;
+            display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid #1a3050;
+            background: linear-gradient(135deg, #1e4d8c, #0f1f3a);
+        }
+        .sidebar nav { padding: 12px; flex: 1; overflow-y: auto; }
+        .sidebar nav .nav-section {
+            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px;
+            color: #4a6080; padding: 16px 10px 6px; font-weight: 700;
+        }
+        .sidebar nav a {
+            display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+            border-radius: 10px; color: #8899b4; text-decoration: none;
+            font-weight: 500; font-size: 0.9rem; cursor: pointer;
+            min-height: 48px; transition: all 0.2s; margin-bottom: 2px;
+        }
+        .sidebar nav a:hover { background: #152544; color: #e2e8f0; }
+        .sidebar nav a.active { background: #1e4d8c; color: #fff; font-weight: 700; }
+        .sidebar nav a .nav-badge { background: #ef4444; color: #fff; border-radius: 12px; padding: 3px 8px; font-size: 0.65rem; margin-left: auto; font-weight: 700; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid #1a3050; }
+        .logout-btn {
+            width: 100%; background: #152544; border: 1px solid #1a3050;
+            color: #e2e8f0; padding: 12px; border-radius: 10px; cursor: pointer;
+            font-size: 0.85rem; min-height: 46px; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .logout-btn:hover { background: rgba(239,68,68,0.2); }
+
+        .main { flex: 1; margin-left: 280px; display: flex; flex-direction: column; }
+        .topbar {
+            background: var(--surface); border-bottom: 1px solid #1a3050;
+            padding: 12px 16px; display: flex; justify-content: space-between;
+            align-items: center; position: sticky; top: 0; z-index: 50; min-height: 56px;
+        }
+        .hamburger { display: none; background: none; border: none; font-size: 1.4rem; color: #e2e8f0; cursor: pointer; padding: 8px; min-width: 44px; min-height: 44px; }
+        .content-area { padding: 16px; flex: 1; }
+
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .metric-card {
+            background: var(--surface); border-radius: var(--radius-sm);
+            padding: 14px 12px; box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 10px;
+            border: 1px solid #1a3050; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .metric-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; flex-shrink: 0; }
+        .metric-value { font-size: 1.4rem; font-weight: 800; }
+        .metric-label { color: var(--text-secondary); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card {
+            background: var(--surface); border-radius: var(--radius-sm);
+            box-shadow: var(--shadow); border: 1px solid #1a3050;
+            margin-bottom: 12px; overflow: hidden;
+        }
+        .card-header {
+            padding: 14px 16px; border-bottom: 1px solid #1a3050;
+            font-weight: 700; display: flex; justify-content: space-between;
+            align-items: center; font-size: 0.9rem; flex-wrap: wrap; gap: 8px;
+            background: #152544;
+        }
+        .table-responsive { overflow-x: auto; max-height: 50vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 500px; }
+        th {
+            background: #152544; padding: 10px; text-align: left;
+            font-weight: 700; color: #8899b4; border-bottom: 2px solid #1a3050;
+            position: sticky; top: 0; font-size: 0.7rem; text-transform: uppercase;
+        }
+        td { padding: 10px; border-bottom: 1px solid #1a3050; font-size: 0.8rem; }
+        tr:hover td { background: #152544; }
+
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-active { background: rgba(16,185,129,0.15); color: #34d399; }
+        .badge-danger { background: rgba(239,68,68,0.15); color: #f87171; }
+        .badge-warning { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .badge-info { background: rgba(6,182,212,0.15); color: #22d3ee; }
+
+        .action-btn {
+            padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer;
+            font-size: 0.7rem; margin: 2px; font-weight: 700; min-height: 34px;
+            display: inline-flex; align-items: center; gap: 4px;
+            transition: all 0.15s;
+        }
+        .action-btn:active { transform: scale(0.94); }
+        .btn-receive { background: #10b981; color: #fff; }
+        .btn-collect { background: #7c3aed; color: #fff; }
+        .btn-reassign { background: #f59e0b; color: #0a1628; }
+        .btn-delete { background: rgba(239,68,68,0.2); color: #f87171; }
+        .btn-restore { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .btn-view { background: #152544; color: #e2e8f0; border: 1px solid #1a3050; }
+        .btn-preview { background: linear-gradient(135deg, #06b6d4, #1e4d8c); color: #fff; }
+        .btn-scan { background: linear-gradient(135deg, #1e4d8c, #7c3aed); color: #fff; }
+        .btn-lock { background: #475569; color: #fff; }
+        .btn-kill { background: #dc2626; color: #fff; }
+
+        .mobile-cards { display: none; }
+        .data-card {
+            background: var(--surface); border: 1px solid #1a3050;
+            border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
+        }
+        .data-card .card-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem; flex-wrap: wrap; gap: 4px; }
+        .data-card .card-label { font-weight: 700; color: #8899b4; font-size: 0.6rem; text-transform: uppercase; }
+        .data-card .card-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #1a3050; flex-wrap: wrap; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center;
+            z-index: 3000; padding: 16px; backdrop-filter: blur(8px);
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: #0f1f3a; border-radius: 20px; padding: 24px;
+            width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto;
+            border: 1px solid #1a3050; box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .preview-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+            margin: 16px 0;
+        }
+        .preview-item {
+            background: rgba(10,22,40,0.5); padding: 12px;
+            border-radius: 10px; border: 1px solid #1a3050;
+        }
+        .preview-label {
+            font-size: 0.65rem; text-transform: uppercase;
+            color: #8899b4; font-weight: 600; margin-bottom: 4px;
+        }
+        .preview-value {
+            font-size: 0.9rem; font-weight: 600; word-break: break-word;
+        }
+
+        .image-upload-area {
+            border: 2px dashed #1a3050;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(10,22,40,0.5);
+            margin-bottom: 12px;
+        }
+        .image-upload-area:hover { border-color: #1e4d8c; background: rgba(30,77,140,0.1); }
+        .image-upload-area.has-image { border-color: #10b981; background: rgba(16,185,129,0.1); }
+        .image-preview {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+        }
+        .image-preview-item {
+            position: relative; width: 80px; height: 80px;
+            border-radius: 8px; overflow: hidden; border: 2px solid #1a3050;
+        }
+        .image-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .image-preview-item .remove-image {
+            position: absolute; top: 2px; right: 2px;
+            background: rgba(239,68,68,0.9); color: #fff;
+            border: none; border-radius: 50%; width: 20px; height: 20px;
+            cursor: pointer; font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .security-bot-panel {
+            background: linear-gradient(135deg, #0a1628, #1e4d8c);
+            border-radius: var(--radius); border: 2px solid #1e4d8c;
+            padding: 16px; margin-bottom: 14px; color: #e2e8f0;
+            box-shadow: 0 0 40px rgba(30,77,140,0.2);
+        }
+        .security-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-bottom: 12px; }
+        .security-stat {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; padding: 10px; text-align: center;
+        }
+        .security-stat .stat-value { font-size: 1.3rem; font-weight: 800; color: #60a5fa; }
+        .security-stat .stat-label { font-size: 0.6rem; color: #6b8ab0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .bot-btn {
+            padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05); color: #e2e8f0; cursor: pointer;
+            font-size: 0.7rem; font-weight: 700; min-height: 38px;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: all 0.2s;
+        }
+        .bot-btn:hover { background: rgba(255,255,255,0.1); }
+        .bot-btn.active-bot { background: #10b981; border-color: #10b981; }
+
+        .insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px; }
+        .insight-card {
+            background: var(--surface); border-radius: var(--radius-sm);
+            padding: 14px; border: 1px solid #1a3050;
+        }
+        .insight-card h4 { font-size: 0.8rem; font-weight: 700; margin-bottom: 8px; }
+        .insight-metric { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #1a3050; font-size: 0.75rem; }
+        .insight-value { font-weight: 700; font-size: 0.85rem; }
+        .staff-rating { display: inline-flex; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.7rem; }
+        .staff-rating.top { background: rgba(16,185,129,0.15); color: #34d399; }
+        .staff-rating.good { background: rgba(30,77,140,0.2); color: #60a5fa; }
+        .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+        .live-dot.danger { background: #ef4444; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .threat-alert {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 10px; padding: 12px; margin-bottom: 8px;
+        }
+
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 0.7rem; font-weight: 700; margin-bottom: 3px; color: #8899b4; text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 2px solid #1a3050; background: #0a1628;
+            color: #e2e8f0; font-size: 16px; font-family: var(--font);
+        }
+        .btn { padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 700; border: none; font-size: 0.8rem; min-height: 42px; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #1e4d8c; color: #fff; }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-outline { background: transparent; border: 2px solid #1a3050; color: #e2e8f0; }
+        .btn-sm { padding: 6px 12px; font-size: 0.7rem; min-height: 32px; }
+
+        .toast {
+            position: fixed; bottom: 20px; left: 16px; right: 16px;
+            background: linear-gradient(135deg, #1e4d8c, #2563eb);
+            color: #fff; padding: 14px 18px;
+            border-radius: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            z-index: 9999; font-size: 0.85rem; text-align: center;
+            max-width: 420px; margin: 0 auto; font-weight: 600;
+            animation: slideUp 0.3s ease;
+        }
+        .toast.error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .toast.warning { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .toast.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .empty-state { text-align: center; padding: 24px; color: #4a6080; font-size: 0.8rem; }
+        .empty-state i { font-size: 2rem; margin-bottom: 8px; display: block; opacity: 0.5; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 285px; max-width: 80vw; }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; }
+            .hamburger { display: flex; }
+            .desktop-table { display: none; }
+            .mobile-cards { display: block; }
+            .content-area { padding: 12px; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .security-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+            .insights-grid { grid-template-columns: 1fr; gap: 8px; }
+            .preview-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-overlay" id="loginScreen">
+        <div class="login-card">
+            <div class="logo"><i class="fas fa-shield-halved"></i></div>
+            <h2>Admin Portal</h2>
+            <p class="subtitle">CampusVault • Secure Control Panel</p>
+            <button class="google-btn" id="googleSignInBtn" onclick="handleGoogleSignIn()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google">
+                Sign in with Google
+            </button>
+            <p class="login-error" id="loginError"></p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+        <aside class="sidebar" id="sidebar">
+            <div class="brand"><i class="fas fa-shield-halved"></i> CampusVault</div>
+            <nav>
+                <div class="nav-section">Security AI</div>
+                <a href="#" class="active" data-tab="security"><i class="fas fa-robot"></i> AI Sentinel <span class="live-dot" style="margin-left:auto;"></span></a>
+                <div class="nav-section">Bookings</div>
+                <a href="#" data-tab="storage"><i class="fas fa-box-archive"></i> Active Bookings</a>
+                <a href="#" data-tab="received"><i class="fas fa-box-check"></i> Received Items <span class="nav-badge" id="receivedBadge" style="display:none;">0</span></a>
+                <a href="#" data-tab="collected"><i class="fas fa-people-carry"></i> Collected Items <span class="nav-badge" id="collectedBadge" style="display:none;">0</span></a>
+                <a href="#" data-tab="trash"><i class="fas fa-trash-restore"></i> Trash <span class="nav-badge" id="trashBadge" style="display:none;">0</span></a>
+                <div class="nav-section">Management</div>
+                <a href="#" data-tab="staff"><i class="fas fa-users"></i> Staff Management</a>
+                <a href="#" data-tab="insights"><i class="fas fa-chart-line"></i> Insights & Analytics <span class="live-dot" style="margin-left:auto;"></span></a>
+                <a href="#" data-tab="pending"><i class="fas fa-clock"></i> Pending Approvals <span class="nav-badge" id="pendingBadge" style="display:none;">0</span></a>
+                <a href="#" data-tab="admins"><i class="fas fa-users-cog"></i> Admin Management</a>
+                <div class="nav-section">Data & Logs</div>
+                <a href="#" data-tab="records"><i class="fas fa-file-pdf"></i> Digital Records</a>
+                <a href="#" data-tab="reviews"><i class="fas fa-star"></i> Customer Reviews</a>
+                <a href="#" data-tab="logs"><i class="fas fa-history"></i> Activity Logs <span class="live-dot" style="margin-left:auto;"></span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <img id="userAvatar" src="" style="width:36px;height:36px;border-radius:50%;display:none;border:2px solid #06b6d4;" alt="">
+                    <span id="userNameDisplay" style="font-size:0.85rem;font-weight:600;">Admin</span>
+                </div>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+                    <span style="font-weight:800;font-size:0.9rem;">🛡️ Admin Control Panel</span>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <button class="btn btn-sm btn-outline" onclick="openBackupModal()"><i class="fas fa-download"></i> Backup</button>
+                    <button class="btn btn-sm btn-outline" id="themeToggleDesktop"><i class="fas fa-sun"></i> Light</button>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="metrics-grid" id="metricsContainer"></div>
+
+                <!-- Security Tab -->
+                <div class="tab-content active" id="tab-security">
+                    <div class="security-bot-panel">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+                            <div style="width:48px;height:48px;background:linear-gradient(135deg,#1e4d8c,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;"><i class="fas fa-robot"></i></div>
+                            <div style="flex:1;min-width:140px;"><h3 style="font-size:1rem;font-weight:800;">Guardian AI v7.0 <span class="live-dot"></span></h3><p style="font-size:0.7rem;opacity:0.7;">Autonomous Threat Detection & Response</p></div>
+                            <span style="font-size:0.7rem;padding:4px 10px;border-radius:14px;background:rgba(16,185,129,0.15);color:#10b981;font-weight:700;" id="botStatusBadge"><span class="live-dot"></span> All Systems Active</span>
+                        </div>
+                        <div class="security-stats-grid">
+                            <div class="security-stat"><div class="stat-value" id="secBlockedToday">0</div><div class="stat-label">Blocked</div></div>
+                            <div class="security-stat"><div class="stat-value" id="secSessions">0</div><div class="stat-label">Sessions</div></div>
+                            <div class="security-stat"><div class="stat-value" id="secFailed">0</div><div class="stat-label">Failed</div></div>
+                            <div class="security-stat"><div class="stat-value" id="secRisk">Low</div><div class="stat-label">Risk Level</div></div>
+                            <div class="security-stat"><div class="stat-value" id="secThreats">0</div><div class="stat-label">Threats</div></div>
+                            <div class="security-stat"><div class="stat-value" id="secPatched">0</div><div class="stat-label">Patched</div></div>
+                            <div class="security-stat"><div class="stat-value" id="secBots">5</div><div class="stat-label">AI Bots</div></div>
+                            <div class="security-stat"><div class="stat-value" id="secScans">0</div><div class="stat-label">Scans</div></div>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <button class="bot-btn btn-scan" onclick="runDeepScan()"><i class="fas fa-search"></i> Deep Scan</button>
+                            <button class="bot-btn" style="background:#10b981;" onclick="autoPatchAll()"><i class="fas fa-wrench"></i> Auto-Patch</button>
+                            <button class="bot-btn btn-lock" onclick="lockAllSessions()"><i class="fas fa-lock"></i> Lock All</button>
+                            <button class="bot-btn btn-kill" onclick="terminateAllSessions()"><i class="fas fa-power-off"></i> Kill All</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span><i class="fas fa-bug" style="color:#ef4444;"></i> Active Threats</span><button class="btn btn-sm btn-delete" onclick="clearThreats()">Clear</button></div>
+                        <div style="padding:14px;" id="activeThreatsList"><div class="empty-state"><i class="fas fa-shield-alt"></i> No active threats</div></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span><i class="fas fa-shield-alt"></i> Security Monitor</span><span class="live-dot"></span></div>
+                        <div class="table-responsive" id="securityLogTable" style="max-height:300px;"></div>
+                    </div>
+                </div>
+
+                <!-- Storage Tab -->
+                <div class="tab-content" id="tab-storage">
+                    <div class="card">
+                        <div class="card-header"><span><i class="fas fa-box-archive"></i> Active Bookings</span><span class="badge badge-active" id="storageCount">0</span></div>
+                        <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>Booking ID</th><th>Customer</th><th>Items</th><th>Category</th><th>Staff</th><th>Status</th><th>Actions</th></tr></thead><tbody id="storageTableBody"></tbody></table></div></div>
+                        <div class="mobile-cards"><div id="storageCardsContainer"></div></div>
+                    </div>
+                </div>
+
+                <!-- Received Tab -->
+                <div class="tab-content" id="tab-received">
+                    <div class="card">
+                        <div class="card-header"><span><i class="fas fa-box-check"></i> Received Items</span><span class="badge badge-active" id="receivedCount">0</span></div>
+                        <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>Booking ID</th><th>Customer</th><th>Items</th><th>Received By</th><th>Photos</th><th>Actions</th></tr></thead><tbody id="receivedTableBody"></tbody></table></div></div>
+                        <div class="mobile-cards"><div id="receivedCardsContainer"></div></div>
+                    </div>
+                </div>
+
+                <!-- Collected Tab -->
+                <div class="tab-content" id="tab-collected">
+                    <div class="card">
+                        <div class="card-header"><span><i class="fas fa-people-carry"></i> Collected Items</span><span class="badge badge-active" id="collectedCount">0</span></div>
+                        <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>Booking ID</th><th>Customer</th><th>Items</th><th>Collected By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="collectedTableBody"></tbody></table></div></div>
+                        <div class="mobile-cards"><div id="collectedCardsContainer"></div></div>
+                    </div>
+                </div>
+
+                <!-- Trash Tab -->
+                <div class="tab-content" id="tab-trash">
+                    <div class="card">
+                        <div class="card-header"><span><i class="fas fa-trash-restore"></i> Trash</span><span class="badge badge-danger" id="trashCount">0</span><button class="btn btn-sm btn-delete" onclick="emptyTrash()"><i class="fas fa-trash"></i> Empty</button></div>
+                        <div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items/Type</th><th>Deleted By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="trashTableBody"></tbody></table></div></div>
+                        <div class="mobile-cards"><div id="trashCardsContainer"></div></div>
+                    </div>
+                </div>
+
+                <!-- Insights Tab -->
+                <div class="tab-content" id="tab-insights">
+                    <div class="insights-grid">
+                        <div class="insight-card"><h4><i class="fas fa-trophy" style="color:#f59e0b;"></i> Top Performers</h4><div id="topPerformersList"></div></div>
+                        <div class="insight-card"><h4><i class="fas fa-fire" style="color:#ef4444;"></i> Activity Overview</h4><div id="activityStreaks"></div></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span>Staff Performance</span><button class="btn btn-sm btn-primary" onclick="exportPerformanceReport()"><i class="fas fa-download"></i> Export</button></div>
+                        <div class="table-responsive"><table><thead><tr><th>Staff</th><th>Email</th><th>Items</th><th>Rating</th><th>Status</th></tr></thead><tbody id="staffPerformanceTableBody"></tbody></table></div>
+                    </div>
+                </div>
+
+                <!-- Staff Tab -->
+                <div class="tab-content" id="tab-staff">
+                    <div class="card">
+                        <div class="card-header">Staff Management</div>
+                        <div style="padding:14px;">
+                            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                                <input type="text" id="newStaffName" placeholder="Full Name" style="flex:1;min-width:150px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:16px;">
+                                <input type="email" id="newStaffEmail" placeholder="Email Address" style="flex:1;min-width:200px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:16px;">
+                                <button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-plus"></i> Add Staff</button>
+                            </div>
+                            <div id="staffList" style="max-height:400px;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Tab -->
+                <div class="tab-content" id="tab-pending">
+                    <div class="card">
+                        <div class="card-header"><span><i class="fas fa-clock"></i> Pending Approvals</span><span class="badge badge-warning" id="pendingCount">0</span></div>
+                        <div style="padding:14px;" id="pendingApprovalsContainer"></div>
+                    </div>
+                </div>
+
+                <!-- Admins Tab -->
+                <div class="tab-content" id="tab-admins">
+                    <div class="card">
+                        <div class="card-header">Admin Management</div>
+                        <div style="padding:14px;">
+                            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                                <input type="text" id="newAdminName" placeholder="Admin Name" style="flex:1;min-width:150px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:16px;">
+                                <input type="email" id="newAdminEmail" placeholder="Admin Email" style="flex:1;min-width:200px;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:16px;">
+                                <button class="btn btn-primary" onclick="addAdmin()"><i class="fas fa-plus"></i> Add Admin</button>
+                            </div>
+                            <div id="adminList" style="max-height:400px;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Records Tab -->
+                <div class="tab-content" id="tab-records">
+                    <div class="card">
+                        <div class="card-header">Digital Records <button class="btn btn-sm btn-delete" onclick="trashAllRecords()">Clear</button></div>
+                        <div class="table-responsive" id="digitalRecordsTable" style="max-height:400px;"></div>
+                    </div>
+                </div>
+
+                <!-- Reviews Tab -->
+                <div class="tab-content" id="tab-reviews">
+                    <div class="card">
+                        <div class="card-header">Customer Reviews <button class="btn btn-sm btn-delete" onclick="trashAllReviews()">Clear</button></div>
+                        <div class="table-responsive" id="reviewsTable" style="max-height:400px;"></div>
+                    </div>
+                </div>
+
+                <!-- Logs Tab -->
+                <div class="tab-content" id="tab-logs">
+                    <div class="card">
+                        <div class="card-header">Activity Logs <button class="btn btn-sm btn-delete" onclick="trashAllLogs()">Clear</button></div>
+                        <div class="table-responsive" id="staffLogsTable" style="max-height:400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="receiveItemsModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:16px;">📦 Receive Items</h3>
+            <form onsubmit="submitReceivedItems(event)" id="receiveForm">
+                <input type="hidden" id="receiveBookingKey">
+                <div class="form-group"><label>Booking ID</label><input type="text" id="receiveBookingId" readonly></div>
+                <div class="form-group"><label>Customer Name</label><input type="text" id="receiveCustomerName" readonly></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="form-group"><label>Item Count *</label><input type="number" id="receiveItemCount" required min="1"></div>
+                    <div class="form-group"><label>Category</label><select id="receiveCategory"><option>Electronics</option><option>Furniture</option><option>Clothing</option><option>Books</option><option>Sports</option><option>Other</option></select></div>
+                </div>
+                <div class="form-group"><label>Description *</label><textarea id="receiveDescription" rows="2" required></textarea></div>
+                <div class="form-group">
+                    <label>Item Photos * (Required)</label>
+                    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('itemImages').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:#8899b4;margin-bottom:8px;display:block;"></i>
+                        <span style="color:#8899b4;">Click to upload photos</span>
+                        <span style="display:block;font-size:0.7rem;color:#4a6080;margin-top:4px;">Max 5 images, 5MB each</span>
+                    </div>
+                    <input type="file" id="itemImages" accept="image/*" multiple style="display:none;" onchange="handleImageSelect(event)">
+                    <div class="image-preview" id="imagePreviewContainer"></div>
+                    <small style="color:#ef4444;display:none;" id="imageError">⚠️ Please upload at least one photo</small>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('receiveItemsModal')">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="submitReceiveBtn"><i class="fas fa-check"></i> Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="collectionModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:16px;">📋 Collect Items</h3>
+            <form onsubmit="submitCollection(event)">
+                <input type="hidden" id="collectBookingKey">
+                <div class="form-group"><label>Booking ID</label><input type="text" id="collectBookingId" readonly></div>
+                <div class="form-group"><label>Customer</label><input type="text" id="collectCustomerName" readonly></div>
+                <div class="form-group"><label>Items</label><input type="text" id="collectItems" readonly></div>
+                <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('collectionModal')">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="backupModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:16px;">💾 Backup Data</h3>
+            <div class="form-group"><label>Format</label><select id="backupFormat"><option value="excel">Excel (.xlsx)</option><option value="pdf">PDF</option></select></div>
+            <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeModal('backupModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="startBackup()"><i class="fas fa-download"></i> Generate</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ===== FIREBASE INIT =====
+const firebaseConfig = {
+    apiKey: "AIzaSyCuCd89dawEHOGrKmcCimw3pBErKYJU_VI",
+    authDomain: "campusvault-connect.firebaseapp.com",
+    databaseURL: "https://campusvault-connect-default-rtdb.firebaseio.com",
+    projectId: "campusvault-connect",
+    storageBucket: "campusvault-connect.firebasestorage.app",
+    messagingSenderId: "185904648786",
+    appId: "1:185904648786:web:390764d552d388b6e2058b"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+const storage = firebase.storage();
+
+// ===== REFS =====
+const refs = {
+    admins: db.ref('admins'),
+    staff: db.ref('staff'),
+    bookings: db.ref('bookings'),
+    pending: db.ref('pending_approvals'),
+    records: db.ref('digital_records'),
+    reviews: db.ref('reviews'),
+    logs: db.ref('staff_logs'),
+    received: db.ref('received_items'),
+    collected: db.ref('collected_items'),
+    trash: db.ref('trash'),
+    blocked: db.ref('blocked_ips'),
+    secLogs: db.ref('security_logs'),
+    threats: db.ref('threats'),
+    status: db.ref('staff_status')
+};
+
+// ===== GLOBALS =====
+let currentUser = null;
+let allBookings = [], allReceived = [], allCollected = [], allTrash = [];
+let allPending = [], staffList = [], adminList = [], perfData = {};
+let selectedImages = [];
+let securityBots = {};
+let securityStats = { blocked: 0, sessions: 0, failed: 0, risk: 'Low', threats: 0, patched: 0, bots: 5, scans: 0 };
+
+// ===== UTILS =====
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function toast(m, type) {
+    type = type || '';
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.innerHTML = m;
+    document.body.appendChild(t);
+    setTimeout(function() { t.remove(); }, 3500);
+}
+function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('show'); }
+function closeModal(id) { 
+    const m = document.getElementById(id); 
+    if (m) {
+        m.classList.remove('show');
+        if (id === 'receiveItemsModal') {
+            selectedImages = [];
+            document.getElementById('imagePreviewContainer').innerHTML = '';
+            var uploadArea = document.getElementById('imageUploadArea');
+            if (uploadArea) uploadArea.classList.remove('has-image');
+            var imgErr = document.getElementById('imageError');
+            if (imgErr) imgErr.style.display = 'none';
+        }
+    }
+}
+window.closeModal = closeModal;
+document.querySelectorAll('.modal-overlay').forEach(function(m) {
+    m.addEventListener('click', function(e) {
+        if (e.target === m) closeModal(m.id);
+    });
+});
+
+// Theme
+function setTheme(d) {
+    document.body.classList.toggle('dark', d);
+    localStorage.setItem('theme', d ? 'dark' : 'light');
+}
+setTheme(true);
+document.getElementById('themeToggleDesktop').onclick = function() {
+    const isDark = !document.body.classList.contains('dark');
+    setTheme(isDark);
+    document.getElementById('themeToggleDesktop').innerHTML = isDark ? '<i class="fas fa-sun"></i> Light' : '<i class="fas fa-moon"></i> Dark';
+};
+
+// ===== IMAGE HANDLING =====
+window.handleImageSelect = function(event) {
+    const files = Array.from(event.target.files);
+    const container = document.getElementById('imagePreviewContainer');
+    const uploadArea = document.getElementById('imageUploadArea');
+    
+    if (selectedImages.length + files.length > 5) {
+        toast('Max 5 images', 'warning');
+        return;
+    }
+    
+    files.forEach(function(file) {
+        if (file.size > 5242880) {
+            toast('Max 5MB each', 'warning');
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            toast('Images only', 'warning');
+            return;
+        }
+        
+        selectedImages.push(file);
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.className = 'image-preview-item';
+            div.innerHTML = '<img src="' + e.target.result + '" alt="Preview"><button class="remove-image" onclick="removeImg(' + (selectedImages.length-1) + ',event)">×</button>';
+            container.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    if (selectedImages.length > 0) {
+        uploadArea.classList.add('has-image');
+        var imgErr = document.getElementById('imageError');
+        if (imgErr) imgErr.style.display = 'none';
+    }
+    event.target.value = '';
+};
+
+window.removeImg = function(i, e) {
+    e.stopPropagation();
+    selectedImages.splice(i, 1);
+    const c = document.getElementById('imagePreviewContainer');
+    c.innerHTML = '';
+    
+    selectedImages.forEach(function(f, j) {
+        const r = new FileReader();
+        r.onload = function(ev) {
+            const d = document.createElement('div');
+            d.className = 'image-preview-item';
+            d.innerHTML = '<img src="' + ev.target.result + '"><button class="remove-image" onclick="removeImg(' + j + ',event)">×</button>';
+            c.appendChild(d);
+        };
+        r.readAsDataURL(f);
+    });
+    
+    if (selectedImages.length === 0) {
+        var uploadArea = document.getElementById('imageUploadArea');
+        if (uploadArea) uploadArea.classList.remove('has-image');
+    }
+};
+
+// ===== AUTH =====
+window.handleGoogleSignIn = function() {
+    const btn = document.getElementById('googleSignInBtn');
+    const err = document.getElementById('loginError');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    err.style.display = 'none';
+    
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
+    auth.signInWithPopup(provider).then(async function(res) {
+        const u = res.user;
+        const k = u.email.replace(/\./g, ',');
+        
+        const snap = await refs.admins.child(k).once('value');
+        if (!snap.exists()) {
+            await refs.threats.push({
+                type: 'unauthorized_access',
+                email: u.email,
+                timestamp: new Date().toISOString(),
+                severity: 'high',
+                details: 'Non-admin access attempt'
+            });
+            await auth.signOut();
+            err.textContent = '❌ Access Denied';
+            err.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22"> Sign in with Google';
+            return;
+        }
+        
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').classList.add('active');
+        currentUser = u;
+        document.getElementById('userNameDisplay').textContent = u.displayName || u.email;
+        
+        if (u.photoURL) {
+            document.getElementById('userAvatar').src = u.photoURL;
+            document.getElementById('userAvatar').style.display = 'block';
+        }
+        
+        await refs.status.child(k).set({
+            online: true,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP,
+            email: u.email,
+            name: u.displayName || '',
+            role: 'admin'
+        });
+        refs.status.child(k).onDisconnect().set({ online: false });
+        
+        await refs.logs.push({
+            staff: u.email,
+            action: 'admin_login',
+            timestamp: new Date().toISOString()
+        });
+        
+        loadAllData();
+        startAIBots();
+        toast('✅ Welcome, ' + (u.displayName||u.email).split(' ')[0] + '!', 'success');
+    }).catch(function(e) {
+        console.error(e);
+        err.textContent = '❌ ' + (e.message||'Failed');
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22"> Sign in with Google';
+    });
+};
+
+function logout() { 
+    if (currentUser) {
+        refs.status.child(currentUser.email.replace(/\./g, ',')).remove();
+        refs.logs.push({
+            staff: currentUser.email,
+            action: 'admin_logout',
+            timestamp: new Date().toISOString()
+        });
+    }
+    stopAIBots();
+    auth.signOut().then(function() {
+        location.reload();
+    });
+}
+
+// ===== AI SECURITY BOTS =====
+function startAIBots() {
+    stopAIBots();
+    
+    // Bot 1: Continuous Scanner - scans every 20s
+    securityBots.scanner = setInterval(async function() {
+        try {
+            const [bookings, threats] = await Promise.all([
+                refs.bookings.once('value'),
+                refs.threats.once('value')
+            ]);
+            const b = bookings.val() || {};
+            const t = threats.val() || {};
+            let issues = 0;
+            
+            Object.entries(b).forEach(function([k, v]) {
+                if (!v.bookingId || v.status === 'suspicious') {
+                    issues++;
+                    refs.threats.push({
+                        type: 'booking_anomaly',
+                        bookingKey: k,
+                        timestamp: new Date().toISOString(),
+                        severity: 'medium',
+                        details: 'Scanner Bot detected anomaly',
+                        bot: 'Scanner'
+                    });
+                }
+            });
+            
+            securityStats.scans++;
+            securityStats.threats = Object.keys(t).length;
+            updateSecStats();
+        } catch(e) {
+            console.error('Scanner:', e);
+        }
+    }, 20000);
+
+    // Bot 2: Session Monitor - every 15s
+    securityBots.monitor = setInterval(async function() {
+        try {
+            const s = await refs.status.once('value');
+            const status = s.val() || {};
+            securityStats.sessions = Object.values(status).filter(function(x) {
+                return x.online;
+            }).length;
+            
+            Object.entries(status).forEach(function([k, v]) {
+                if (v.locked || v.suspicious) {
+                    refs.threats.push({
+                        type: 'suspicious_session',
+                        userKey: k,
+                        timestamp: new Date().toISOString(),
+                        severity: 'high',
+                        details: 'Monitor Bot flagged session',
+                        bot: 'Monitor',
+                        source: v.role || 'unknown'
+                    });
+                }
+            });
+            
+            updateSecStats();
+        } catch(e) {
+            console.error('Monitor:', e);
+        }
+    }, 15000);
+
+    // Bot 3: Threat Analyzer - every 25s
+    securityBots.analyzer = setInterval(async function() {
+        try {
+            const t = await refs.threats.once('value');
+            const threats = t.val() || {};
+            const recent = Object.values(threats).filter(function(x) {
+                return Date.now() - new Date(x.timestamp).getTime() < 3600000;
+            });
+            
+            securityStats.threats = recent.length;
+            securityStats.risk = recent.length > 10 ? 'Critical' :
+                                recent.length > 5 ? 'High' :
+                                recent.length > 2 ? 'Medium' : 'Low';
+            
+            recent.forEach(async function(x) {
+                if (x.severity === 'high' && x.source) {
+                    await refs.blocked.push({
+                        source: x.source,
+                        reason: x.type,
+                        timestamp: new Date().toISOString(),
+                        blockedBy: 'Analyzer Bot'
+                    });
+                    securityStats.blocked++;
+                }
+            });
+            
+            updateSecStats();
+            renderThreats(recent);
+        } catch(e) {
+            console.error('Analyzer:', e);
+        }
+    }, 25000);
+
+    // Bot 4: Cleanup - every 5min
+    securityBots.cleanup = setInterval(async function() {
+        try {
+            const [t, l] = await Promise.all([
+                refs.threats.once('value'),
+                refs.secLogs.once('value')
+            ]);
+            const threats = t.val() || {};
+            const logs = l.val() || {};
+            
+            for (const [k, v] of Object.entries(threats)) {
+                if (Date.now() - new Date(v.timestamp).getTime() > 604800000) {
+                    await refs.threats.child(k).remove();
+                }
+            }
+            for (const [k, v] of Object.entries(logs)) {
+                if (Date.now() - new Date(v.timestamp).getTime() > 2592000000) {
+                    await refs.secLogs.child(k).remove();
+                }
+            }
+        } catch(e) {
+            console.error('Cleanup:', e);
+        }
+    }, 300000);
+
+    // Bot 5: Integrity Checker - every 30s
+    securityBots.integrity = setInterval(async function() {
+        try {
+            const [admins, staff, status] = await Promise.all([
+                refs.admins.once('value'),
+                refs.staff.once('value'),
+                refs.status.once('value')
+            ]);
+            const all = Object.assign({}, admins.val()||{}, staff.val()||{}, status.val()||{});
+            
+            Object.entries(all).forEach(function([k, v]) {
+                if (v.blocked || v.suspicious) {
+                    refs.threats.push({
+                        type: 'integrity_violation',
+                        userKey: k,
+                        timestamp: new Date().toISOString(),
+                        severity: 'high',
+                        details: 'Integrity Bot flagged ' + k,
+                        bot: 'Integrity',
+                        source: v.role || 'unknown'
+                    });
+                }
+            });
+        } catch(e) {
+            console.error('Integrity:', e);
+        }
+    }, 30000);
+
+    toast('🤖 5 AI Security Bots activated', 'success');
+}
+
+function stopAIBots() {
+    Object.values(securityBots).forEach(function(b) {
+        clearInterval(b);
+    });
+    securityBots = {};
+    securityStats.bots = 0;
+    updateSecStats();
+}
+
+function updateSecStats() {
+    var el;
+    el = document.getElementById('secBlockedToday'); if (el) el.textContent = securityStats.blocked;
+    el = document.getElementById('secSessions'); if (el) el.textContent = securityStats.sessions;
+    el = document.getElementById('secFailed'); if (el) el.textContent = securityStats.failed;
+    el = document.getElementById('secRisk'); if (el) {
+        el.textContent = securityStats.risk;
+        el.style.color = securityStats.risk === 'Critical' ? '#ef4444' :
+                        securityStats.risk === 'High' ? '#f97316' :
+                        securityStats.risk === 'Medium' ? '#f59e0b' : '#10b981';
+    }
+    el = document.getElementById('secThreats'); if (el) el.textContent = securityStats.threats;
+    el = document.getElementById('secPatched'); if (el) el.textContent = securityStats.patched;
+    el = document.getElementById('secBots'); if (el) el.textContent = securityStats.bots;
+    el = document.getElementById('secScans'); if (el) el.textContent = securityStats.scans;
+}
+
+function renderThreats(threats) {
+    const c = document.getElementById('activeThreatsList');
+    if (!c) return;
+    
+    if (threats.length) {
+        c.innerHTML = threats.map(function(t) {
+            return '<div class="threat-alert">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+                '<span style="font-weight:700;color:#f87171;">🚨 ' + esc(t.type||'Unknown') + '</span>' +
+                '<span class="badge ' + (t.severity==='high'?'badge-danger':'badge-warning') + '">' + (t.severity||'medium') + '</span>' +
+                '</div>' +
+                '<div style="font-size:0.75rem;color:#8899b4;">' + esc(t.details||'') + '</div>' +
+                '<div style="font-size:0.6rem;color:#4a6080;margin-top:4px;">Bot: ' + esc(t.bot||'System') + ' • Source: ' + esc(t.source||'unknown') + ' • ' + new Date(t.timestamp).toLocaleString() + '</div>' +
+                '</div>';
+        }).join('');
+    } else {
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-shield-alt"></i> No active threats</div>';
+    }
+}
+
+// Security Actions
+window.runDeepScan = async function() {
+    toast('🔄 Running deep scan...');
+    const start = Date.now();
+    
+    const [b, r, c] = await Promise.all([
+        refs.bookings.once('value'),
+        refs.received.once('value'),
+        refs.collected.once('value')
+    ]);
+    
+    const bookings = b.val()||{};
+    const received = r.val()||{};
+    const collected = c.val()||{};
+    const t = await refs.threats.once('value');
+    const threats = t.val()||{};
+    const time = ((Date.now()-start)/1000).toFixed(2);
+    
+    await refs.secLogs.push({
+        type: 'deep_scan',
+        timestamp: new Date().toISOString(),
+        details: 'Scanned ' + Object.keys(bookings).length + ' bookings, ' +
+                 Object.keys(received).length + ' received, ' +
+                 Object.keys(collected).length + ' collected in ' + time + 's',
+        by: currentUser ? currentUser.email : 'system'
+    });
+    
+    securityStats.scans++;
+    securityStats.threats = Object.keys(threats).length;
+    updateSecStats();
+    toast('✅ Scan done in ' + time + 's • ' + securityStats.threats + ' threats', 'success');
+};
+
+window.autoPatchAll = function() {
+    const p = securityStats.threats;
+    securityStats.patched += p;
+    securityStats.threats = 0;
+    securityStats.risk = 'Low';
+    
+    refs.secLogs.push({
+        type: 'auto_patch',
+        timestamp: new Date().toISOString(),
+        details: 'Patched ' + p + ' threats',
+        by: currentUser ? currentUser.email : 'system'
+    });
+    
+    updateSecStats();
+    toast('🔧 Patched ' + p + ' threats!', 'success');
+};
+
+window.lockAllSessions = function() {
+    if (!confirm('Lock ALL sessions?')) return;
+    
+    refs.status.once('value').then(async function(s) {
+        const u = {};
+        Object.keys(s.val()||{}).forEach(function(k) {
+            u[k] = { online: false, locked: true, lockedAt: new Date().toISOString() };
+        });
+        await refs.status.update(u);
+    });
+    
+    refs.secLogs.push({
+        type: 'lockdown',
+        timestamp: new Date().toISOString(),
+        details: 'Locked by ' + (currentUser ? currentUser.email : 'system'),
+        severity: 'critical'
+    });
+    
+    toast('🔒 All locked');
+};
+
+window.terminateAllSessions = function() {
+    if (!confirm('TERMINATE ALL?')) return;
+    
+    refs.status.remove();
+    refs.secLogs.push({
+        type: 'termination',
+        timestamp: new Date().toISOString(),
+        details: 'Terminated by ' + (currentUser ? currentUser.email : 'system'),
+        severity: 'critical'
+    });
+    
+    toast('💀 Terminated');
+};
+
+window.clearThreats = async function() {
+    if (!confirm('Clear threats?')) return;
+    await refs.threats.remove();
+    securityStats.threats = 0;
+    securityStats.risk = 'Low';
+    updateSecStats();
+    toast('Cleared');
+};
+
+// ===== STAFF =====
+async function loadStaffList() {
+    const s = await refs.staff.once('value');
+    const staff = s.val() || {};
+    staffList = Object.entries(staff).map(function([k, d]) {
+        return {
+            key: k,
+            email: k.replace(/,/g, '.'),
+            name: d.name || k.replace(/,/g, '.').split('@')[0],
+            added: d.added || '',
+            status: d.status || 'active'
+        };
+    });
+    renderStaffList();
+    calcPerf();
+}
+
+function renderStaffList() {
+    const c = document.getElementById('staffList');
+    if (!c) return;
+    
+    if (staffList.length) {
+        c.innerHTML = staffList.map(function(s) {
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#152544;border-radius:10px;margin-bottom:6px;border:1px solid #1a3050;">' +
+                '<div style="display:flex;align-items:center;gap:10px;">' +
+                '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1e4d8c,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">' + esc(s.name[0]) + '</div>' +
+                '<div><div style="font-weight:600;">' + esc(s.name) + '</div><div style="font-size:0.7rem;color:#8899b4;">' + esc(s.email) + '</div></div>' +
+                '</div>' +
+                '<button class="action-btn btn-delete" onclick="deleteStaff(\'' + s.key + '\')"><i class="fas fa-trash"></i></button>' +
+                '</div>';
+        }).join('');
+    } else {
+        c.innerHTML = '<div class="empty-state">No staff</div>';
+    }
+}
+
+window.deleteStaff = async function(k) {
+    if (!confirm('Delete?')) return;
+    const d = (await refs.staff.child(k).once('value')).val();
+    await refs.trash.push({
+        type: 'staff',
+        key: k,
+        data: d,
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    await refs.staff.child(k).remove();
+    toast('Moved to trash');
+};
+
+window.addStaff = async function() {
+    const n = document.getElementById('newStaffName').value.trim();
+    const e = document.getElementById('newStaffEmail').value.trim();
+    
+    if (!n || !e || !e.includes('@')) return toast('Invalid input', 'error');
+    
+    const k = e.replace(/\./g, ',');
+    if ((await refs.staff.child(k).once('value')).exists()) return toast('Exists', 'warning');
+    
+    await refs.staff.child(k).set({
+        name: n,
+        email: e,
+        added: new Date().toISOString(),
+        by: currentUser ? currentUser.email : 'system',
+        status: 'active'
+    });
+    
+    document.getElementById('newStaffName').value = '';
+    document.getElementById('newStaffEmail').value = '';
+    toast('✅ Added', 'success');
+};
+
+// ===== BOOKINGS =====
+window.openReceive = function(key) {
+    const b = allBookings.find(function(x) { return x._key === key; });
+    if (!b) return;
+    
+    document.getElementById('receiveBookingKey').value = key;
+    document.getElementById('receiveBookingId').value = b.bookingId || key.slice(-6);
+    document.getElementById('receiveCustomerName').value = b.name || '';
+    document.getElementById('receiveItemCount').value = b.itemCount || 1;
+    document.getElementById('receiveCategory').value = b.category || 'Other';
+    document.getElementById('receiveDescription').value = '';
+    
+    selectedImages = [];
+    document.getElementById('imagePreviewContainer').innerHTML = '';
+    var uploadArea = document.getElementById('imageUploadArea');
+    if (uploadArea) uploadArea.classList.remove('has-image');
+    var imgErr = document.getElementById('imageError');
+    if (imgErr) imgErr.style.display = 'none';
+    
+    openModal('receiveItemsModal');
+};
+
+window.submitReceivedItems = async function(e) {
+    e.preventDefault();
+    
+    if (selectedImages.length === 0) {
+        var imgErr = document.getElementById('imageError');
+        if (imgErr) imgErr.style.display = 'block';
+        return;
+    }
+    
+    const btn = document.getElementById('submitReceiveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    const k = document.getElementById('receiveBookingKey').value;
+    
+    try {
+        const urls = [];
+        for (const f of selectedImages) {
+            const snap = await storage.ref('received/' + k + '/' + Date.now() + '_' + f.name).put(f);
+            urls.push(await snap.ref.getDownloadURL());
+        }
+        
+        await refs.received.push({
+            bookingKey: k,
+            bookingId: document.getElementById('receiveBookingId').value,
+            customerName: document.getElementById('receiveCustomerName').value,
+            itemCount: parseInt(document.getElementById('receiveItemCount').value),
+            category: document.getElementById('receiveCategory').value,
+            description: document.getElementById('receiveDescription').value,
+            images: urls,
+            receivedBy: currentUser ? currentUser.email : 'system',
+            timestamp: new Date().toISOString()
+        });
+        
+        await refs.bookings.child(k).update({
+            status: 'received',
+            receivedAt: new Date().toISOString(),
+            receivedBy: currentUser ? currentUser.email : 'system'
+        });
+        
+        await refs.logs.push({
+            staff: currentUser ? currentUser.email : 'system',
+            action: 'received_items',
+            bookingKey: k,
+            timestamp: new Date().toISOString()
+        });
+        
+        closeModal('receiveItemsModal');
+        toast('📦 Received!', 'success');
+    } catch(err) {
+        console.error(err);
+        toast('Failed', 'error');
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check"></i> Confirm';
+};
+
+window.openCollect = function(key) {
+    const i = allReceived.find(function(r) { return r.bookingKey === key; });
+    if (!i) return;
+    
+    document.getElementById('collectBookingKey').value = key;
+    document.getElementById('collectBookingId').value = i.bookingId || key.slice(-6);
+    document.getElementById('collectCustomerName').value = i.customerName || '';
+    document.getElementById('collectItems').value = (i.itemCount || '') + ' ' + (i.category || '');
+    
+    openModal('collectionModal');
+};
+
+window.submitCollection = async function(e) {
+    e.preventDefault();
+    
+    const k = document.getElementById('collectBookingKey').value;
+    
+    await refs.collected.push({
+        bookingKey: k,
+        bookingId: document.getElementById('collectBookingId').value,
+        customerName: document.getElementById('collectCustomerName').value,
+        items: document.getElementById('collectItems').value,
+        collectedBy: currentUser ? currentUser.email : 'system',
+        timestamp: new Date().toISOString()
+    });
+    
+    await refs.bookings.child(k).update({
+        status: 'collected',
+        collectedAt: new Date().toISOString()
+    });
+    
+    const ri = allReceived.find(function(r) { return r.bookingKey === k; });
+    if (ri && ri.key) {
+        await refs.trash.push({
+            type: 'received_collected',
+            key: ri.key,
+            data: ri,
+            by: currentUser ? currentUser.email : 'system',
+            at: new Date().toISOString()
+        });
+        await refs.received.child(ri.key).remove();
+    }
+    
+    await refs.logs.push({
+        staff: currentUser ? currentUser.email : 'system',
+        action: 'collected',
+        bookingKey: k,
+        timestamp: new Date().toISOString()
+    });
+    
+    closeModal('collectionModal');
+    toast('✅ Collected', 'success');
+};
+
+// ===== PREVIEW =====
+window.showPreview = function(key) {
+    const booking = allBookings.find(function(b) { return b._key === key; }) ||
+                   allReceived.find(function(r) { return r.bookingKey === key; }) ||
+                   allCollected.find(function(c) { return c.bookingKey === key; });
+    
+    if (!booking) return toast('Booking not found', 'error');
+    
+    const existing = document.querySelector('.preview-modal');
+    if (existing) existing.remove();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show preview-modal';
+    modal.style.zIndex = '4000';
+    
+    modal.innerHTML = '<div class="modal-content" style="max-width:600px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
+        '<h3><i class="fas fa-eye" style="color:#06b6d4;"></i> Booking Preview</h3>' +
+        '<button onclick="this.closest(\'.preview-modal\').remove()" style="background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>' +
+        '</div>' +
+        '<div class="preview-grid">' +
+        '<div class="preview-item"><div class="preview-label">Booking ID</div><div class="preview-value">' + esc(booking.bookingId || key.slice(-6)) + '</div></div>' +
+        '<div class="preview-item"><div class="preview-label">Customer</div><div class="preview-value">' + esc(booking.customerName || booking.name || 'N/A') + '</div></div>' +
+        '<div class="preview-item"><div class="preview-label">Items</div><div class="preview-value">' + (booking.itemCount || '?') + ' ' + esc(booking.category || '') + '</div></div>' +
+        '<div class="preview-item"><div class="preview-label">Status</div><div class="preview-value"><span class="badge ' + (booking.status==='active'?'badge-active':booking.status==='received'?'badge-info':'badge-active') + '">' + esc(booking.status||'active') + '</span></div></div>' +
+        '<div class="preview-item"><div class="preview-label">Assigned Staff</div><div class="preview-value">' + (booking.assigned_to ? esc(booking.assigned_to.split('@')[0]) : '<span style="color:#f87171;">Unassigned</span>') + '</div></div>' +
+        '<div class="preview-item"><div class="preview-label">Date</div><div class="preview-value">' + (booking.timestamp ? new Date(booking.timestamp).toLocaleDateString() : 'N/A') + '</div></div>' +
+        '</div>' +
+        (booking.description ? '<div style="background:rgba(10,22,40,0.5);padding:12px;border-radius:10px;margin-top:8px;"><div class="preview-label">Description</div><div style="font-size:0.85rem;">' + esc(booking.description) + '</div></div>' : '') +
+        (booking.images && booking.images.length ? '<div style="margin-top:8px;"><div class="preview-label" style="margin-bottom:8px;">Photos (' + booking.images.length + ')</div><div style="display:flex;gap:8px;flex-wrap:wrap;">' + booking.images.map(function(url) { return '<img src="' + url + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #1a3050;">'; }).join('') + '</div></div>' : '') +
+        '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">' +
+        '<button class="btn btn-outline btn-sm" onclick="this.closest(\'.preview-modal\').remove()">Close</button>' +
+        (booking.status !== 'received' && booking.status !== 'collected' ? '<button class="btn btn-receive btn-sm" onclick="this.closest(\'.preview-modal\').remove();openReceive(\'' + key + '\')">Receive</button>' : '') +
+        '<button class="btn btn-reassign btn-sm" onclick="this.closest(\'.preview-modal\').remove();quickAssignPopup(\'' + key + '\',\'' + (booking.assigned_to||'') + '\')">Reassign</button>' +
+        '</div>' +
+        '</div>';
+    
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+};
+
+// ===== QUICK ASSIGN =====
+window.quickAssignPopup = function(key, curr) {
+    const existing = document.querySelector('.assign-popup');
+    if (existing) existing.remove();
+    
+    const popup = document.createElement('div');
+    popup.className = 'modal-overlay show assign-popup';
+    popup.style.zIndex = '4000';
+    
+    popup.innerHTML = '<div class="modal-content" style="max-width:400px;">' +
+        '<h3 style="margin-bottom:12px;"><i class="fas fa-user-plus"></i> Assign Staff</h3>' +
+        '<div style="max-height:200px;overflow-y:auto;margin-bottom:12px;">' +
+        staffList.map(function(s) {
+            return '<div onclick="quickAssign(\'' + esc(s.email) + '\',\'' + key + '\')" style="padding:10px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:' + (s.email===curr?'#1e4d8c':'#152544') + ';display:flex;align-items:center;gap:8px;">' +
+                '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1e4d8c,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.7rem;">' + esc(s.name[0]) + '</div>' +
+                '<div><div style="font-weight:600;font-size:0.8rem;">' + esc(s.name) + '</div><div style="font-size:0.65rem;color:#8899b4;">' + esc(s.email) + '</div></div>' +
+                '</div>';
+        }).join('') +
+        '</div>' +
+        '<button class="btn btn-outline btn-sm" onclick="this.closest(\'.assign-popup\').remove()" style="width:100%;">Cancel</button>' +
+        '</div>';
+    
+    document.body.appendChild(popup);
+    popup.addEventListener('click', function(e) {
+        if (e.target === popup) popup.remove();
+    });
+};
+
+window.quickAssign = async function(email, key) {
+    const popup = document.querySelector('.assign-popup');
+    if (popup) popup.remove();
+    
+    const k = email.replace(/\./g, ',');
+    if (!(await refs.staff.child(k).once('value')).exists()) {
+        await refs.staff.child(k).set({
+            name: email.split('@')[0],
+            email: email,
+            added: new Date().toISOString(),
+            status: 'active'
+        });
+    }
+    
+    await refs.bookings.child(key).update({
+        assigned_to: email,
+        assigned_at: new Date().toISOString()
+    });
+    
+    await refs.logs.push({
+        staff: currentUser ? currentUser.email : 'system',
+        action: 'assigned',
+        bookingKey: key,
+        to: email,
+        timestamp: new Date().toISOString()
+    });
+    
+    toast('✅ Assigned to ' + email.split('@')[0], 'success');
+};
+
+// ===== DELETE & TRASH =====
+window.deleteBooking = async function(key) {
+    if (!confirm('Move to trash?')) return;
+    const b = allBookings.find(function(x) { return x._key === key; });
+    if (!b) return;
+    
+    await refs.trash.push({
+        type: 'booking',
+        bookingKey: key,
+        data: b,
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    await refs.bookings.child(key).remove();
+    toast('🗑️ Moved to trash');
+};
+
+window.deleteReceivedItem = async function(key) {
+    if (!confirm('Move to trash?')) return;
+    const i = allReceived.find(function(r) { return r.key === key; });
+    if (!i) return;
+    
+    await refs.trash.push({
+        type: 'received',
+        key: key,
+        data: i,
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    await refs.received.child(key).remove();
+    toast('🗑️ Moved');
+};
+
+window.deleteCollectedItem = async function(key) {
+    if (!confirm('Move to trash?')) return;
+    const i = allCollected.find(function(c) { return c.key === key; });
+    if (!i) return;
+    
+    await refs.trash.push({
+        type: 'collected',
+        key: key,
+        data: i,
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    await refs.collected.child(key).remove();
+    toast('🗑️ Moved');
+};
+
+window.restoreFromTrash = async function(tk) {
+    if (!confirm('Restore?')) return;
+    const t = allTrash.find(function(x) { return x.key === tk; });
+    if (!t) return;
+    
+    if (t.type === 'booking') {
+        await refs.bookings.child(t.bookingKey).set(Object.assign({}, t.data, { restored: true }));
+    } else if (t.type === 'received') {
+        await refs.received.child(t.key).set(Object.assign({}, t.data, { restored: true }));
+    } else if (t.type === 'collected') {
+        await refs.collected.child(t.key).set(Object.assign({}, t.data, { restored: true }));
+    } else if (t.type === 'staff') {
+        await refs.staff.child(t.key).set(Object.assign({}, t.data, { restored: true }));
+    }
+    
+    await refs.trash.child(tk).remove();
+    toast('♻️ Restored', 'success');
+};
+
+window.permaDelete = async function(tk) {
+    if (!confirm('Permanent delete?')) return;
+    await refs.trash.child(tk).remove();
+    toast('❌ Deleted');
+};
+
+window.emptyTrash = async function() {
+    if (!confirm('Empty trash?')) return;
+    const s = await refs.trash.once('value');
+    for (const k of Object.keys(s.val()||{})) {
+        await refs.trash.child(k).remove();
+    }
+    toast('🗑️ Emptied');
+};
+
+// ===== RENDERING =====
+function renderStorage(bookings) {
+    const active = bookings.filter(function(b) { return !b.status || b.status === 'active'; });
+    
+    var el = document.getElementById('storageCount');
+    if (el) el.textContent = active.length;
+    
+    el = document.getElementById('storageTableBody');
+    if (el) {
+        el.innerHTML = active.length ? active.map(function(b) {
+            return '<tr>' +
+                '<td><strong>' + esc(b.bookingId||b._key?.slice(-6)) + '</strong></td>' +
+                '<td>' + esc(b.name||'—') + '</td>' +
+                '<td>' + (b.itemCount||'?') + '</td>' +
+                '<td>' + esc(b.category||'—') + '</td>' +
+                '<td>' + (b.assigned_to ? esc(b.assigned_to.split('@')[0]) : '<span style="color:#f87171;">Unassigned</span>') + '</td>' +
+                '<td><span class="badge badge-active">Active</span></td>' +
+                '<td>' +
+                '<button class="action-btn btn-preview" onclick="showPreview(\'' + b._key + '\')"><i class="fas fa-eye"></i></button>' +
+                '<button class="action-btn btn-receive" onclick="openReceive(\'' + b._key + '\')"><i class="fas fa-box"></i></button>' +
+                '<button class="action-btn btn-reassign" onclick="quickAssignPopup(\'' + b._key + '\',\'' + (b.assigned_to||'') + '\')"><i class="fas fa-user"></i></button>' +
+                '<button class="action-btn btn-delete" onclick="deleteBooking(\'' + b._key + '\')"><i class="fas fa-trash"></i></button>' +
+                '</td></tr>';
+        }).join('') : '<tr><td colspan="7"><div class="empty-state">No active bookings</div></td></tr>';
+    }
+    
+    el = document.getElementById('storageCardsContainer');
+    if (el) {
+        el.innerHTML = active.length ? active.map(function(b) {
+            return '<div class="data-card">' +
+                '<div class="card-row"><span class="card-label">ID</span><strong>' + esc(b.bookingId||b._key?.slice(-6)) + '</strong></div>' +
+                '<div class="card-row"><span class="card-label">Customer</span>' + esc(b.name||'—') + '</div>' +
+                '<div class="card-actions">' +
+                '<button class="action-btn btn-receive" onclick="openReceive(\'' + b._key + '\')">Receive</button>' +
+                '<button class="action-btn btn-reassign" onclick="quickAssignPopup(\'' + b._key + '\')">Assign</button>' +
+                '<button class="action-btn btn-delete" onclick="deleteBooking(\'' + b._key + '\')">Delete</button>' +
+                '</div></div>';
+        }).join('') : '<div class="empty-state">No active bookings</div>';
+    }
+}
+
+function renderReceived(items) {
+    var el = document.getElementById('receivedCount');
+    if (el) el.textContent = items.length;
+    
+    el = document.getElementById('receivedBadge');
+    if (el) {
+        el.textContent = items.length;
+        el.style.display = items.length ? 'inline-block' : 'none';
+    }
+    
+    el = document.getElementById('receivedTableBody');
+    if (el) {
+        el.innerHTML = items.length ? items.map(function(r) {
+            return '<tr>' +
+                '<td><strong>' + esc(r.bookingId||r.bookingKey?.slice(-6)) + '</strong></td>' +
+                '<td>' + esc(r.customerName||'—') + '</td>' +
+                '<td>' + (r.itemCount||0) + ' ' + esc(r.category||'') + '</td>' +
+                '<td>' + esc((r.receivedBy||'').split('@')[0]) + '</td>' +
+                '<td>' + (r.images ? '📸 ' + r.images.length : '0') + '</td>' +
+                '<td>' +
+                '<button class="action-btn btn-collect" onclick="openCollect(\'' + r.bookingKey + '\')"><i class="fas fa-hand-holding"></i></button>' +
+                '<button class="action-btn btn-preview" onclick="showPreview(\'' + r.bookingKey + '\')"><i class="fas fa-eye"></i></button>' +
+                '<button class="action-btn btn-delete" onclick="deleteReceivedItem(\'' + r.key + '\')"><i class="fas fa-trash"></i></button>' +
+                '</td></tr>';
+        }).join('') : '<tr><td colspan="6"><div class="empty-state">No received items</div></td></tr>';
+    }
+    
+    el = document.getElementById('receivedCardsContainer');
+    if (el) {
+        el.innerHTML = items.length ? items.map(function(r) {
+            return '<div class="data-card" style="border-left:3px solid #10b981;">' +
+                '<div class="card-row"><span class="card-label">ID</span><strong>' + esc(r.bookingId||r.bookingKey?.slice(-6)) + '</strong></div>' +
+                '<div class="card-actions">' +
+                '<button class="action-btn btn-collect" onclick="openCollect(\'' + r.bookingKey + '\')">Collect</button>' +
+                '<button class="action-btn btn-delete" onclick="deleteReceivedItem(\'' + r.key + '\')">Delete</button>' +
+                '</div></div>';
+        }).join('') : '<div class="empty-state">No items</div>';
+    }
+}
+
+function renderCollected(items) {
+    var el = document.getElementById('collectedCount');
+    if (el) el.textContent = items.length;
+    
+    el = document.getElementById('collectedBadge');
+    if (el) {
+        el.textContent = items.length;
+        el.style.display = items.length ? 'inline-block' : 'none';
+    }
+    
+    el = document.getElementById('collectedTableBody');
+    if (el) {
+        el.innerHTML = items.length ? items.map(function(c) {
+            return '<tr>' +
+                '<td><strong>' + esc(c.bookingId||c.bookingKey?.slice(-6)) + '</strong></td>' +
+                '<td>' + esc(c.customerName||'—') + '</td>' +
+                '<td>' + esc(c.items||'—') + '</td>' +
+                '<td>' + esc((c.collectedBy||'').split('@')[0]) + '</td>' +
+                '<td>' + (c.timestamp ? new Date(c.timestamp).toLocaleDateString() : '—') + '</td>' +
+                '<td>' +
+                '<button class="action-btn btn-preview" onclick="showPreview(\'' + c.bookingKey + '\')"><i class="fas fa-eye"></i></button>' +
+                '<button class="action-btn btn-delete" onclick="deleteCollectedItem(\'' + c.key + '\')"><i class="fas fa-trash"></i></button>' +
+                '</td></tr>';
+        }).join('') : '<tr><td colspan="6"><div class="empty-state">No collected items</div></td></tr>';
+    }
+    
+    el = document.getElementById('collectedCardsContainer');
+    if (el) {
+        el.innerHTML = items.length ? items.map(function(c) {
+            return '<div class="data-card" style="border-left:3px solid #7c3aed;">' +
+                '<div class="card-row"><span class="card-label">ID</span><strong>' + esc(c.bookingId||c.bookingKey?.slice(-6)) + '</strong></div>' +
+                '<div class="card-actions">' +
+                '<button class="action-btn btn-preview" onclick="showPreview(\'' + c.bookingKey + '\')">Preview</button>' +
+                '<button class="action-btn btn-delete" onclick="deleteCollectedItem(\'' + c.key + '\')">Delete</button>' +
+                '</div></div>';
+        }).join('') : '<div class="empty-state">No items</div>';
+    }
+}
+
+function renderTrash(items) {
+    var el = document.getElementById('trashCount');
+    if (el) el.textContent = items.length;
+    
+    el = document.getElementById('trashBadge');
+    if (el) {
+        el.textContent = items.length;
+        el.style.display = items.length ? 'inline-block' : 'none';
+    }
+    
+    el = document.getElementById('trashTableBody');
+    if (el) {
+        el.innerHTML = items.length ? items.map(function(t) {
+            return '<tr>' +
+                '<td><strong>' + esc(t.bookingId||t.bookingKey||t.key?.slice(-6)||'N/A') + '</strong></td>' +
+                '<td>' + esc(t.customerName||t.data?.customerName||t.data?.name||'—') + '</td>' +
+                '<td>' + esc(t.items||t.data?.items||t.type||'—') + '</td>' +
+                '<td>' + esc((t.by||t.deletedBy||'').split('@')[0]) + '</td>' +
+                '<td>' + (t.at ? new Date(t.at).toLocaleDateString() : '—') + '</td>' +
+                '<td>' +
+                '<button class="action-btn btn-restore" onclick="restoreFromTrash(\'' + t.key + '\')"><i class="fas fa-undo"></i></button>' +
+                '<button class="action-btn btn-delete" onclick="permaDelete(\'' + t.key + '\')"><i class="fas fa-trash"></i></button>' +
+                '</td></tr>';
+        }).join('') : '<tr><td colspan="6"><div class="empty-state">Empty</div></td></tr>';
+    }
+    
+    el = document.getElementById('trashCardsContainer');
+    if (el) {
+        el.innerHTML = items.length ? items.map(function(t) {
+            return '<div class="data-card" style="border-left:3px solid #ef4444;">' +
+                '<div class="card-row"><span class="card-label">ID</span><strong>' + esc(t.bookingId||t.key?.slice(-6)||'N/A') + '</strong></div>' +
+                '<div class="card-actions">' +
+                '<button class="action-btn btn-restore" onclick="restoreFromTrash(\'' + t.key + '\')">Restore</button>' +
+                '<button class="action-btn btn-delete" onclick="permaDelete(\'' + t.key + '\')">Delete</button>' +
+                '</div></div>';
+        }).join('') : '<div class="empty-state">Empty</div>';
+    }
+}
+
+// ===== PERFORMANCE =====
+function calcPerf() {
+    const p = {};
+    staffList.forEach(function(s) {
+        p[s.email] = { name: s.name, email: s.email, total: 0, rating: 'Inactive', status: '⚪ Offline' };
+    });
+    
+    allReceived.forEach(function(i) {
+        if (i.receivedBy && p[i.receivedBy]) p[i.receivedBy].total += i.itemCount || 0;
+    });
+    
+    allCollected.forEach(function(i) {
+        if (i.collectedBy && p[i.collectedBy]) p[i.collectedBy].total += parseInt(i.items) || 0;
+    });
+    
+    Object.values(p).forEach(function(s) {
+        if (s.total > 50) { s.rating = '🏆 Top'; s.status = '🟢 Active'; }
+        else if (s.total > 20) { s.rating = '👍 Good'; s.status = '🟢 Active'; }
+        else if (s.total > 0) { s.rating = '📈 Active'; s.status = '🟡 Learning'; }
+    });
+    
+    perfData = p;
+    renderPerf();
+}
+
+function renderPerf() {
+    const arr = Object.values(perfData);
+    
+    var el = document.getElementById('topPerformersList');
+    if (el) {
+        el.innerHTML = arr.filter(function(s) { return s.total > 0; })
+            .sort(function(a, b) { return b.total - a.total; })
+            .slice(0, 5)
+            .map(function(s, i) {
+                return '<div class="insight-metric"><span>' + (i+1) + '. ' + esc(s.name) + '</span><span class="insight-value" style="color:#34d399;">' + s.total + '</span></div>';
+            }).join('') || '<div class="empty-state">No data</div>';
+    }
+    
+    el = document.getElementById('activityStreaks');
+    if (el) {
+        el.innerHTML = arr.filter(function(s) { return s.total > 0; })
+            .map(function(s) {
+                return '<div class="insight-metric"><span>' + esc(s.name) + '</span><span>' + s.total + ' items</span></div>';
+            }).join('') || '<div class="empty-state">No activity</div>';
+    }
+    
+    el = document.getElementById('staffPerformanceTableBody');
+    if (el) {
+        el.innerHTML = arr.length ? arr.map(function(s) {
+            return '<tr><td><strong>' + esc(s.name) + '</strong></td><td>' + esc(s.email) + '</td><td>' + s.total + '</td><td><span class="staff-rating ' + (s.rating.includes('Top')?'top':'good') + '">' + s.rating + '</span></td><td>' + s.status + '</td></tr>';
+        }).join('') : '<tr><td colspan="5"><div class="empty-state">Loading...</div></td></tr>';
+    }
+}
+
+window.exportPerformanceReport = function() {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+        ['Staff','Email','Items','Rating']
+    ].concat(Object.values(perfData).map(function(s) {
+        return [s.name, s.email, s.total, s.rating];
+    }))), 'Performance');
+    XLSX.writeFile(wb, 'performance_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    toast('📊 Exported', 'success');
+};
+
+// ===== APPROVALS =====
+function loadPending() {
+    refs.pending.on('value', function(s) {
+        const a = [];
+        s.forEach(function(c) {
+            const v = c.val();
+            v._key = c.key;
+            if (!v.status || v.status === 'pending') a.push(v);
+        });
+        allPending = a;
+        
+        var el = document.getElementById('pendingCount');
+        if (el) el.textContent = a.length;
+        
+        el = document.getElementById('pendingBadge');
+        if (el) {
+            el.textContent = a.length;
+            el.style.display = a.length ? 'inline-block' : 'none';
+        }
+        
+        el = document.getElementById('pendingApprovalsContainer');
+        if (el) {
+            el.innerHTML = a.length ? a.map(function(x) {
+                return '<div style="background:#152544;border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid #1a3050;">' +
+                    '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
+                    '<div><h4 style="font-size:0.9rem;font-weight:700;">' + esc(x.type||'Request') + '</h4>' +
+                    '<div style="font-size:0.75rem;color:#8899b4;">' + esc(x.details||'No details') + '</div></div>' +
+                    '<span class="badge badge-warning">Pending</span></div>' +
+                    '<div style="display:flex;gap:6px;">' +
+                    '<button class="action-btn btn-receive" onclick="approveReq(\'' + x._key + '\')">Approve</button>' +
+                    '<button class="action-btn btn-delete" onclick="rejectReq(\'' + x._key + '\')">Reject</button>' +
+                    '</div></div>';
+            }).join('') : '<div class="empty-state">✅ No pending</div>';
+        }
+    });
+}
+
+window.approveReq = async function(k) {
+    await refs.pending.child(k).update({
+        status: 'approved',
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    toast('✅ Approved', 'success');
+};
+
+window.rejectReq = async function(k) {
+    const r = allPending.find(function(x) { return x._key === k; });
+    if (r) {
+        await refs.trash.push({
+            type: 'rejected',
+            key: k,
+            data: r,
+            by: currentUser ? currentUser.email : 'system',
+            at: new Date().toISOString()
+        });
+    }
+    await refs.pending.child(k).update({
+        status: 'rejected',
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    toast('❌ Rejected');
+};
+
+// ===== ADMINS =====
+async function loadAdmins() {
+    const s = await refs.admins.once('value');
+    const a = s.val() || {};
+    adminList = Object.entries(a).map(function([k, d]) {
+        return {
+            key: k,
+            email: k.replace(/,/g, '.'),
+            name: d.name || k.replace(/,/g, '.').split('@')[0]
+        };
+    });
+    renderAdminList();
+}
+
+function renderAdminList() {
+    const c = document.getElementById('adminList');
+    if (!c) return;
+    
+    c.innerHTML = adminList.length ? adminList.map(function(a) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#152544;border-radius:10px;margin-bottom:6px;border:1px solid #1a3050;">' +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+            '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">' + esc(a.name[0]) + '</div>' +
+            '<div><div style="font-weight:600;">' + esc(a.name) + ' <span class="badge badge-active" style="font-size:0.5rem;">Admin</span></div>' +
+            '<div style="font-size:0.7rem;color:#8899b4;">' + esc(a.email) + '</div></div></div>' +
+            (a.email !== (currentUser ? currentUser.email : '') ?
+            '<button class="action-btn btn-delete" onclick="deleteAdmin(\'' + a.key + '\')"><i class="fas fa-trash"></i></button>' :
+            '<span class="badge badge-active">You</span>') +
+            '</div>';
+    }).join('') : '<div class="empty-state">No admins</div>';
+}
+
+window.deleteAdmin = async function(k) {
+    if (!confirm('Delete?')) return;
+    const d = (await refs.admins.child(k).once('value')).val();
+    await refs.trash.push({
+        type: 'admin',
+        key: k,
+        data: d,
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    await refs.admins.child(k).remove();
+    toast('Moved to trash');
+};
+
+window.addAdmin = async function() {
+    const n = document.getElementById('newAdminName').value.trim();
+    const e = document.getElementById('newAdminEmail').value.trim();
+    
+    if (!n || !e || !e.includes('@')) return toast('Invalid', 'error');
+    
+    const k = e.replace(/\./g, ',');
+    if ((await refs.admins.child(k).once('value')).exists()) return toast('Exists', 'warning');
+    
+    await refs.admins.child(k).set({
+        name: n,
+        email: e,
+        added: new Date().toISOString(),
+        by: currentUser ? currentUser.email : 'system'
+    });
+    
+    document.getElementById('newAdminName').value = '';
+    document.getElementById('newAdminEmail').value = '';
+    toast('✅ Added', 'success');
+};
+
+// ===== DATA TABLES =====
+function loadRecords() {
+    refs.records.on('value', function(s) {
+        const r = [];
+        s.forEach(function(c) {
+            r.unshift(Object.assign({ key: c.key }, c.val()));
+        });
+        
+        var el = document.getElementById('digitalRecordsTable');
+        if (el) {
+            el.innerHTML = r.length ? '<table><thead><tr><th>ID</th><th>Type</th><th>Date</th><th>Actions</th></tr></thead><tbody>' +
+                r.map(function(x) {
+                    return '<tr><td>' + (x.key ? x.key.slice(-6) : '') + '</td><td>' + esc(x.type||'N/A') + '</td><td>' + (x.timestamp ? new Date(x.timestamp).toLocaleDateString() : 'N/A') + '</td><td><button class="action-btn btn-delete" onclick="deleteRecord(\'' + x.key + '\')"><i class="fas fa-trash"></i></button></td></tr>';
+                }).join('') + '</tbody></table>' : '<div class="empty-state">No records</div>';
+        }
+    });
+}
+
+window.deleteRecord = async function(k) {
+    const d = (await refs.records.child(k).once('value')).val();
+    await refs.trash.push({
+        type: 'record',
+        key: k,
+        data: d,
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    await refs.records.child(k).remove();
+    toast('Moved');
+};
+
+function loadReviews() {
+    refs.reviews.on('value', function(s) {
+        const r = [];
+        s.forEach(function(c) {
+            r.unshift(Object.assign({ key: c.key }, c.val()));
+        });
+        
+        var el = document.getElementById('reviewsTable');
+        if (el) {
+            el.innerHTML = r.length ? '<table><thead><tr><th>Customer</th><th>Rating</th><th>Comment</th><th>Actions</th></tr></thead><tbody>' +
+                r.map(function(x) {
+                    return '<tr><td>' + esc(x.name||'Anon') + '</td><td>' + '⭐'.repeat(x.rating||0) + '</td><td>' + esc(x.comment||'—') + '</td><td><button class="action-btn btn-delete" onclick="deleteReview(\'' + x.key + '\')"><i class="fas fa-trash"></i></button></td></tr>';
+                }).join('') + '</tbody></table>' : '<div class="empty-state">No reviews</div>';
+        }
+    });
+}
+
+window.deleteReview = async function(k) {
+    const d = (await refs.reviews.child(k).once('value')).val();
+    await refs.trash.push({
+        type: 'review',
+        key: k,
+        data: d,
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    await refs.reviews.child(k).remove();
+    toast('Moved');
+};
+
+function loadLogs() {
+    refs.logs.orderByChild('timestamp').limitToLast(200).on('value', function(s) {
+        const l = [];
+        s.forEach(function(c) {
+            l.unshift(Object.assign({ key: c.key }, c.val()));
+        });
+        
+        var el = document.getElementById('staffLogsTable');
+        if (el) {
+            el.innerHTML = l.length ? '<table><thead><tr><th>Staff</th><th>Action</th><th>Time</th><th>Actions</th></tr></thead><tbody>' +
+                l.map(function(x) {
+                    return '<tr><td>' + esc((x.staff||'System').split('@')[0]) + '</td><td><span class="badge badge-active">' + esc(x.action) + '</span></td><td>' + new Date(x.timestamp).toLocaleString() + '</td><td><button class="action-btn btn-delete" onclick="deleteLog(\'' + x.key + '\')"><i class="fas fa-trash"></i></button></td></tr>';
+                }).join('') + '</tbody></table>' : '<div class="empty-state">No logs</div>';
+        }
+    });
+}
+
+window.deleteLog = async function(k) {
+    const d = (await refs.logs.child(k).once('value')).val();
+    await refs.trash.push({
+        type: 'log',
+        key: k,
+        data: d,
+        by: currentUser ? currentUser.email : 'system',
+        at: new Date().toISOString()
+    });
+    await refs.logs.child(k).remove();
+    toast('Moved');
+};
+
+window.trashAllRecords = async function() {
+    const s = await refs.records.once('value');
+    for (const [k, v] of Object.entries(s.val()||{})) {
+        await refs.trash.push({
+            type: 'record',
+            key: k,
+            data: v,
+            by: currentUser ? currentUser.email : 'system',
+            at: new Date().toISOString()
+        });
+    }
+    await refs.records.remove();
+    toast('Cleared');
+};
+
+window.trashAllReviews = async function() {
+    const s = await refs.reviews.once('value');
+    for (const [k, v] of Object.entries(s.val()||{})) {
+        await refs.trash.push({
+            type: 'review',
+            key: k,
+            data: v,
+            by: currentUser ? currentUser.email : 'system',
+            at: new Date().toISOString()
+        });
+    }
+    await refs.reviews.remove();
+    toast('Cleared');
+};
+
+window.trashAllLogs = async function() {
+    const s = await refs.logs.once('value');
+    for (const [k, v] of Object.entries(s.val()||{})) {
+        await refs.trash.push({
+            type: 'log',
+            key: k,
+            data: v,
+            by: currentUser ? currentUser.email : 'system',
+            at: new Date().toISOString()
+        });
+    }
+    await refs.logs.remove();
+    toast('Cleared');
+};
+
+// ===== BACKUP =====
+window.openBackupModal = function() {
+    openModal('backupModal');
+};
+
+window.startBackup = function() {
+    const f = document.getElementById('backupFormat').value;
+    const ts = new Date().toISOString().split('T')[0];
+    
+    if (f === 'excel') {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet([
+                ['ID', 'Customer', 'Status', 'Staff', 'Items']
+            ].concat(allBookings.map(function(b) {
+                return [b.bookingId, b.name, b.status, b.assigned_to, b.itemCount];
+            }))),
+            'Bookings'
+        );
+        XLSX.writeFile(wb, 'backup_' + ts + '.xlsx');
+    } else {
+        var doc = new window.jspdf.jsPDF();
+        doc.text('Backup', 10, 10);
+        doc.text('Total: ' + allBookings.length, 10, 20);
+        doc.save('backup_' + ts + '.pdf');
+    }
+    
+    toast('💾 Done', 'success');
+    closeModal('backupModal');
+};
+
+function updateMetrics() {
+    var el = document.getElementById('metricsContainer');
+    if (!el) return;
+    
+    el.innerHTML = 
+        '<div class="metric-card"><div class="metric-icon" style="background:#1e4d8c;"><i class="fas fa-box"></i></div><div><div class="metric-value">' + allBookings.length + '</div><div class="metric-label">Total</div></div></div>' +
+        '<div class="metric-card"><div class="metric-icon" style="background:#10b981;"><i class="fas fa-spinner"></i></div><div><div class="metric-value">' + allBookings.filter(function(b) { return !b.status || b.status === 'active'; }).length + '</div><div class="metric-label">Active</div></div></div>' +
+        '<div class="metric-card"><div class="metric-icon" style="background:#3b82f6;"><i class="fas fa-box-check"></i></div><div><div class="metric-value">' + allReceived.length + '</div><div class="metric-label">Received</div></div></div>' +
+        '<div class="metric-card"><div class="metric-icon" style="background:#7c3aed;"><i class="fas fa-people-carry"></i></div><div><div class="metric-value">' + allCollected.length + '</div><div class="metric-label">Collected</div></div></div>' +
+        '<div class="metric-card"><div class="metric-icon" style="background:#f97316;"><i class="fas fa-trash"></i></div><div><div class="metric-value">' + allTrash.length + '</div><div class="metric-label">Trash</div></div></div>' +
+        '<div class="metric-card"><div class="metric-icon" style="background:#06b6d4;"><i class="fas fa-users"></i></div><div><div class="metric-value">' + staffList.length + '</div><div class="metric-label">Staff</div></div></div>';
+}
+
+// ===== SIDEBAR =====
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+
+document.getElementById('hamburgerBtn').onclick = function() {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+};
+
+function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+}
+window.closeSidebar = closeSidebar;
+overlay.addEventListener('click', closeSidebar);
+
+document.querySelectorAll('.sidebar nav a[data-tab]').forEach(function(l) {
+    l.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.tab-content').forEach(function(t) {
+            t.classList.remove('active');
+        });
+        document.querySelectorAll('.sidebar nav a').forEach(function(a) {
+            a.classList.remove('active');
+        });
+        this.classList.add('active');
+        const tab = document.getElementById('tab-' + this.dataset.tab);
+        if (tab) tab.classList.add('active');
+        if (window.innerWidth <= 768) closeSidebar();
+    });
+});
+
+// ===== LOAD ALL =====
+function loadAllData() {
+    refs.bookings.on('value', function(s) {
+        allBookings = [];
+        s.forEach(function(c) {
+            const v = c.val();
+            v._key = c.key;
+            allBookings.push(v);
+        });
+        renderStorage(allBookings);
+        updateMetrics();
+    });
+    
+    refs.received.orderByChild('timestamp').limitToLast(200).on('value', function(s) {
+        allReceived = [];
+        s.forEach(function(c) {
+            allReceived.unshift(Object.assign({ key: c.key }, c.val()));
+        });
+        renderReceived(allReceived);
+        updateMetrics();
+        calcPerf();
+    });
+    
+    refs.collected.orderByChild('timestamp').limitToLast(200).on('value', function(s) {
+        allCollected = [];
+        s.forEach(function(c) {
+            allCollected.unshift(Object.assign({ key: c.key }, c.val()));
+        });
+        renderCollected(allCollected);
+        updateMetrics();
+        calcPerf();
+    });
+    
+    refs.trash.on('value', function(s) {
+        allTrash = [];
+        s.forEach(function(c) {
+            allTrash.unshift(Object.assign({ key: c.key }, c.val()));
+        });
+        renderTrash(allTrash);
+        updateMetrics();
+    });
+    
+    loadPending();
+    loadRecords();
+    loadReviews();
+    loadLogs();
+    
+    refs.staff.on('value', function() {
+        loadStaffList();
+    });
+    
+    refs.admins.on('value', function() {
+        loadAdmins();
+    });
+    
+    loadStaffList();
+    loadAdmins();
+}
+
+function setVH() {
+    document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+}
+
+window.addEventListener('resize', setVH);
+setVH();
+</script>
+</body>
+</html>
