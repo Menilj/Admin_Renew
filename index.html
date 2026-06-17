@@ -186,125 +186,6 @@
         .data-card .card-label { font-weight: 700; color: #8899b4; font-size: 0.6rem; text-transform: uppercase; }
         .data-card .card-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #1a3050; flex-wrap: wrap; }
 
-        /* Image Upload Styles */
-        .image-upload-container {
-            margin: 8px 0;
-        }
-        .image-upload-area {
-            border: 2px dashed #1a3050;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: rgba(10, 22, 40, 0.5);
-            position: relative;
-            min-height: 120px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-        }
-        .image-upload-area:hover {
-            border-color: #1e4d8c;
-            background: rgba(30, 77, 140, 0.1);
-        }
-        .image-upload-area.has-image {
-            border-style: solid;
-            border-color: #10b981;
-            background: rgba(16, 185, 129, 0.05);
-            padding: 10px;
-        }
-        .image-upload-area .upload-icon {
-            font-size: 2rem;
-            color: #4a6080;
-            margin-bottom: 8px;
-        }
-        .image-upload-area .upload-text {
-            font-size: 0.85rem;
-            color: #8899b4;
-            font-weight: 500;
-        }
-        .image-upload-area .upload-hint {
-            font-size: 0.7rem;
-            color: #4a6080;
-            margin-top: 4px;
-        }
-        .image-preview-container {
-            position: relative;
-            width: 100%;
-            max-width: 200px;
-            margin: 0 auto;
-        }
-        .image-preview {
-            width: 100%;
-            height: auto;
-            max-height: 200px;
-            border-radius: 8px;
-            object-fit: contain;
-            border: 2px solid #10b981;
-        }
-        .remove-image-btn {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #ef4444;
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-            z-index: 1;
-        }
-        .remove-image-btn:hover {
-            background: #dc2626;
-            transform: scale(1.1);
-        }
-        .remove-image-btn:active {
-            transform: scale(0.95);
-        }
-        .image-error {
-            color: #ef4444;
-            font-size: 0.75rem;
-            margin-top: 4px;
-            display: none;
-            font-weight: 600;
-        }
-        .image-error.show {
-            display: block;
-        }
-        .required-indicator {
-            color: #ef4444;
-            margin-left: 2px;
-        }
-        .upload-progress {
-            width: 100%;
-            height: 4px;
-            background: #1a3050;
-            border-radius: 2px;
-            margin-top: 8px;
-            overflow: hidden;
-            display: none;
-        }
-        .upload-progress.show {
-            display: block;
-        }
-        .upload-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981, #06b6d4);
-            border-radius: 2px;
-            transition: width 0.3s ease;
-            width: 0%;
-        }
-
         /* Timestamp badge */
         .timestamp-badge {
             display: inline-flex;
@@ -780,7 +661,7 @@
         </main>
     </div>
 
-    <!-- Receive Items Modal with Mandatory Image -->
+    <!-- Receive Items Modal (Image Upload Removed) -->
     <div class="modal-overlay" id="receiveItemsModal">
         <div class="modal-content">
             <h3>Receive Items</h3>
@@ -815,30 +696,7 @@
                     <textarea id="receiveDescription" rows="2" required placeholder="Brief description of items..."></textarea>
                 </div>
                 
-                <!-- Mandatory Image Upload -->
-                <div class="form-group">
-                    <label>Item Photo <span class="required-indicator">*</span></label>
-                    <div class="image-upload-container">
-                        <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('receiveImageInput').click()">
-                            <div class="upload-icon" id="uploadIcon">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                            <div class="upload-text" id="uploadText">Tap to capture or upload photo</div>
-                            <div class="upload-hint" id="uploadHint">Required • JPG, PNG, WEBP (Max 5MB)</div>
-                            <div class="image-preview-container" id="imagePreviewContainer" style="display:none;">
-                                <img id="imagePreview" class="image-preview" src="" alt="Preview">
-                                <button type="button" class="remove-image-btn" onclick="removeImage(event)" title="Remove image">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="upload-progress" id="uploadProgress">
-                                <div class="upload-progress-bar" id="uploadProgressBar"></div>
-                            </div>
-                        </div>
-                        <div class="image-error" id="imageError">⚠️ Please upload a photo of the items</div>
-                    </div>
-                    <input type="file" id="receiveImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageSelect(event)">
-                </div>
+                <!-- Image Upload Section Removed -->
                 
                 <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeReceiveModal()">Cancel</button>
@@ -907,8 +765,6 @@ const refs = {
 let currentUser = null;
 let allBookings = [], allReceived = [], allCollected = [], allTrash = [];
 let allPending = [], staffList = [], perfData = {};
-let selectedImageFile = null;
-let selectedImageDataUrl = null;
 let currentRejectionKey = null;
 
 let securityStats = {
@@ -962,109 +818,6 @@ function formatFullTimestamp(ts) {
     if (isNaN(d.getTime())) return ts;
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + 
            d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-// ===== IMAGE HANDLING =====
-window.handleImageSelect = function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-        document.getElementById('imageError').textContent = '⚠️ Please select a JPG, PNG, or WEBP image';
-        document.getElementById('imageError').classList.add('show');
-        return;
-    }
-    
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-        document.getElementById('imageError').textContent = '⚠️ Image must be less than 5MB';
-        document.getElementById('imageError').classList.add('show');
-        return;
-    }
-    
-    selectedImageFile = file;
-    document.getElementById('imageError').classList.remove('show');
-    
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        selectedImageDataUrl = e.target.result;
-        document.getElementById('imagePreview').src = e.target.result;
-        document.getElementById('imagePreviewContainer').style.display = 'block';
-        document.getElementById('uploadIcon').style.display = 'none';
-        document.getElementById('uploadText').style.display = 'none';
-        document.getElementById('uploadHint').style.display = 'none';
-        document.getElementById('imageUploadArea').classList.add('has-image');
-    };
-    reader.readAsDataURL(file);
-};
-
-window.removeImage = function(event) {
-    event.stopPropagation();
-    selectedImageFile = null;
-    selectedImageDataUrl = null;
-    document.getElementById('receiveImageInput').value = '';
-    document.getElementById('imagePreviewContainer').style.display = 'none';
-    document.getElementById('uploadIcon').style.display = 'block';
-    document.getElementById('uploadText').style.display = 'block';
-    document.getElementById('uploadHint').style.display = 'block';
-    document.getElementById('imageUploadArea').classList.remove('has-image');
-    document.getElementById('imageError').classList.remove('show');
-    document.getElementById('uploadProgress').classList.remove('show');
-};
-
-window.closeReceiveModal = function() {
-    closeModal('receiveItemsModal');
-    // Reset image upload
-    selectedImageFile = null;
-    selectedImageDataUrl = null;
-    document.getElementById('receiveImageInput').value = '';
-    document.getElementById('imagePreviewContainer').style.display = 'none';
-    document.getElementById('uploadIcon').style.display = 'block';
-    document.getElementById('uploadText').style.display = 'block';
-    document.getElementById('uploadHint').style.display = 'block';
-    document.getElementById('imageUploadArea').classList.remove('has-image');
-    document.getElementById('imageError').classList.remove('show');
-    document.getElementById('uploadProgress').classList.remove('show');
-    document.getElementById('receiveForm').reset();
-};
-
-// Upload image to Firebase Storage
-async function uploadReceiptImage(bookingKey) {
-    if (!selectedImageFile) return null;
-    
-    const progressBar = document.getElementById('uploadProgressBar');
-    const progressContainer = document.getElementById('uploadProgress');
-    progressContainer.classList.add('show');
-    
-    try {
-        const timestamp = Date.now();
-        const fileName = `receipts/${bookingKey}_${timestamp}.${selectedImageFile.name.split('.').pop()}`;
-        const uploadTask = storage.ref(fileName).put(selectedImageFile);
-        
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressBar.style.width = progress + '%';
-            },
-            (error) => {
-                console.error('Upload failed:', error);
-                progressContainer.classList.remove('show');
-                throw error;
-            }
-        );
-        
-        await uploadTask;
-        const downloadURL = await storage.ref(fileName).getDownloadURL();
-        progressContainer.classList.remove('show');
-        return downloadURL;
-    } catch (error) {
-        console.error('Image upload error:', error);
-        progressContainer.classList.remove('show');
-        return null;
-    }
 }
 
 // ===== GOOGLE SIGN IN =====
@@ -1239,18 +992,6 @@ window.openReceive = (key) => {
     const b = allBookings.find(x => x._key === key);
     if (!b) return;
     
-    // Reset image upload
-    selectedImageFile = null;
-    selectedImageDataUrl = null;
-    document.getElementById('receiveImageInput').value = '';
-    document.getElementById('imagePreviewContainer').style.display = 'none';
-    document.getElementById('uploadIcon').style.display = 'block';
-    document.getElementById('uploadText').style.display = 'block';
-    document.getElementById('uploadHint').style.display = 'block';
-    document.getElementById('imageUploadArea').classList.remove('has-image');
-    document.getElementById('imageError').classList.remove('show');
-    document.getElementById('uploadProgress').classList.remove('show');
-    
     document.getElementById('receiveBookingKey').value = key;
     document.getElementById('receiveBookingId').value = b.bookingId || key.slice(-6);
     document.getElementById('receiveCustomerName').value = b.name || '';
@@ -1264,33 +1005,14 @@ window.openReceive = (key) => {
 window.submitReceivedItems = async (e) => {
     e.preventDefault();
     
-    // Validate image is selected
-    if (!selectedImageFile) {
-        document.getElementById('imageError').classList.add('show');
-        document.getElementById('imageUploadArea').style.borderColor = '#ef4444';
-        setTimeout(() => {
-            document.getElementById('imageUploadArea').style.borderColor = '';
-        }, 2000);
-        return;
-    }
-    
     const submitBtn = document.getElementById('receiveSubmitBtn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner"></span> Uploading...';
+    submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
     
     try {
         const k = document.getElementById('receiveBookingKey').value;
         
-        // Upload image first
-        const imageUrl = await uploadReceiptImage(k);
-        if (!imageUrl) {
-            toast('❌ Failed to upload image. Please try again.');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Receive';
-            return;
-        }
-        
-        // Save received item data
+        // Save received item data (image upload removed)
         await refs.received.push({
             bookingKey: k,
             bookingId: document.getElementById('receiveBookingId').value,
@@ -1298,14 +1020,13 @@ window.submitReceivedItems = async (e) => {
             itemCount: parseInt(document.getElementById('receiveItemCount').value),
             category: document.getElementById('receiveCategory').value,
             description: document.getElementById('receiveDescription').value,
-            imageUrl: imageUrl,
             receivedBy: currentUser?.email,
             timestamp: new Date().toISOString()
         });
         
         await refs.bookings.child(k).update({ status: 'received', receivedAt: new Date().toISOString() });
         closeReceiveModal();
-        toast('📦 Items received with photo!');
+        toast('📦 Items received!');
     } catch (error) {
         console.error('Receive error:', error);
         toast('❌ Error receiving items. Please try again.');
@@ -1313,6 +1034,11 @@ window.submitReceivedItems = async (e) => {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Receive';
     }
+};
+
+window.closeReceiveModal = function() {
+    closeModal('receiveItemsModal');
+    document.getElementById('receiveForm').reset();
 };
 
 window.openCollect = (key) => {
@@ -1404,7 +1130,6 @@ window.showPreview = (key) => {
                 </div>
             </div>
             ${data.description ? `<div class="preview-item preview-item-full"><div class="preview-label">Description</div><div class="preview-value">${data.description}</div></div>` : ''}
-            ${data.imageUrl ? `<div class="preview-item preview-item-full"><div class="preview-label">Receipt Photo</div><img src="${data.imageUrl}" class="preview-image" alt="Item photo" onclick="window.open('${data.imageUrl}', '_blank')" style="cursor:pointer;"></div>` : ''}
             <div class="preview-actions">
                 <button class="btn btn-outline" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = '';"><i class="fas fa-times"></i> Close</button>
                 ${!isReceived && bookingData.status !== 'received' ? `<button class="btn btn-receive" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = ''; openReceive('${key}')"><i class="fas fa-box"></i> Receive</button>` : ''}
@@ -1563,7 +1288,7 @@ function renderReceived(items) {
         <td>${r.itemCount} ${r.category || ''}</td>
         <td><span class="timestamp-badge" title="${formatFullTimestamp(r.timestamp)}"><i class="far fa-clock"></i> ${formatTimestamp(r.timestamp)}</span></td>
         <td>${(r.receivedBy || '').split('@')[0]}</td>
-        <td>${r.imageUrl ? `<i class="fas fa-check-circle" style="color:#10b981;" title="Photo attached"></i>` : `<i class="fas fa-times-circle" style="color:#ef4444;" title="No photo"></i>`}</td>
+        <td>—</td>
         <td>
             <button class="action-btn btn-preview" onclick="showPreview('${r.bookingKey}')"><i class="fas fa-eye"></i></button>
             <button class="action-btn btn-collect" onclick="openCollect('${r.bookingKey}')"><i class="fas fa-hand-holding"></i></button>
@@ -1574,7 +1299,7 @@ function renderReceived(items) {
             <div class="card-row"><span class="card-label">ID</span><strong>${r.bookingId || r.bookingKey?.slice(-6)}</strong></div>
             <div class="card-row"><span class="card-label">Customer</span>${r.customerName || '—'}</div>
             <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(r.timestamp)}</span></div>
-            <div class="card-row"><span class="card-label">Photo</span>${r.imageUrl ? '<i class="fas fa-check-circle" style="color:#10b981;"></i> Attached' : '<i class="fas fa-times-circle" style="color:#ef4444;"></i> Missing'}</div>
+            <div class="card-row"><span class="card-label">Photo</span>No photo</div>
             <div class="card-actions">
                 <button class="action-btn btn-preview" onclick="showPreview('${r.bookingKey}')">Preview</button>
                 <button class="action-btn btn-collect" onclick="openCollect('${r.bookingKey}')">Collect</button>
@@ -1647,16 +1372,6 @@ function renderPerf() {
 }
 
 // ===== APPROVALS =====
-//function loadPending() {
-  //  refs.pending.on('value', s => {
-    //    allPending = []; s.forEach(c => { const v = c.val(); v._key = c.key; if (v.status === 'pending') allPending.push(v); });
-        //document.getElementById('pendingBadge').textContent = allPending.length;
-      //  document.getElementById('pendingBadge').style.display = allPending.length ? 'inline-block' : 'none';
-        //document.getElementById('pendingApprovalsContainer').innerHTML = allPending.length ? allPending.map(x => `<div class="card" style="margin-bottom:8px;"><div style="padding:14px;"><h4 style="margin-bottom:8px;">${x.proposed?'Edit':'Collection'} Request • ${x.bookingKey?.slice(-6)}</h4><div style="font-size:0.8rem;color:#8899b4;margin-bottom:10px;">${x.details||'No details'}</div><div style="display:flex;gap:6px;"><button class="action-btn btn-receive" onclick="approveReq('${x._key}')"><i class="fas fa-check"></i> Approve</button><button class="action-btn btn-delete" onclick="rejectReq('${x._key}')"><i class="fas fa-times"></i> Reject</button></div></div></div>`).join('') : '<div class="card"><div class="empty-state">No pending approvals</div></div>';
-    //});
-//}
-
-
 function loadPending() {
     refs.pending.on('value', s => {
         allPending = []; 
@@ -1717,9 +1432,6 @@ function loadPending() {
     });
 }
 
-
-
-
 // ===== FEEDBACK/REJECTION WORKFLOW =====
 window.openRejectFeedback = function(approvalKey) {
     currentRejectionKey = approvalKey;
@@ -1771,8 +1483,6 @@ window.submitRejectionWithFeedback = async function() {
     closeFeedbackModal();
     toast('❌ Request rejected with feedback');
 };
-// Add click-outside-to-close for feedback modal
-
 
 // ===== APPROVE COLLECTION (with admin response) =====
 window.approveCollection = async function(approvalKey) {
@@ -1841,7 +1551,6 @@ window.approveAssignment = async function(approvalKey, bookingKey, staffEmail) {
     
     toast('✅ Assignment approved!');
 };
-
 
 window.approveReq = async (k) => { const a = allPending.find(x => x._key === k); if (a) { await refs.pending.child(k).update({ status: 'approved', approvedBy: currentUser?.email, approvedAt: new Date().toISOString() }); toast('✅ Approved!'); } };
 window.rejectReq = async (k) => { await refs.pending.child(k).update({ status: 'rejected', rejectedBy: currentUser?.email, rejectedAt: new Date().toISOString() }); toast('❌ Rejected'); };
