@@ -618,6 +618,59 @@
             .preview-label { font-size: 0.6rem; }
             .preview-value { font-size: 0.8rem; }
         }
+
+
+
+                /* Feedback Modal Styles */
+        .feedback-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center;
+            z-index: 4000; padding: 16px; backdrop-filter: blur(10px);
+            animation: fadeIn 0.2s ease;
+        }
+        .feedback-card {
+            background: linear-gradient(135deg, #0f1f3a, #152544);
+            border-radius: 20px; padding: 24px;
+            width: 100%; max-width: 450px;
+            border: 2px solid #ef4444;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease;
+        }
+        .feedback-card h3 {
+            font-size: 1.2rem; font-weight: 800;
+            color: #f87171; margin-bottom: 16px;
+        }
+        .feedback-textarea {
+            width: 100%; padding: 12px; border-radius: 10px;
+            border: 2px solid #1a3050; background: #0a1628;
+            color: #e2e8f0; font-size: 15px; font-family: var(--font);
+            min-height: 100px; resize: vertical;
+        }
+        .feedback-textarea:focus {
+            outline: none; border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.2);
+        }
+        .btn-feedback-submit {
+            background: #ef4444; color: #fff;
+            padding: 12px 24px; border-radius: 10px;
+            border: none; cursor: pointer; font-weight: 700;
+            font-size: 0.9rem; min-height: 44px;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-feedback-submit:hover { background: #dc2626; }
+        .btn-feedback-submit:active { transform: scale(0.95); }
+        .btn-approve {
+            background: #10b981 !important; color: #fff !important;
+        }
+        .btn-reject-feedback {
+            background: rgba(239,68,68,0.2) !important; color: #f87171 !important;
+            border: 1px solid rgba(239,68,68,0.3) !important;
+        }
+        .badge-pending {
+            background: rgba(59,130,246,0.15); color: #60a5fa;
+            padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -810,7 +863,7 @@
         <textarea class="feedback-textarea" id="feedbackTextarea" placeholder="Explain why this collection request is being rejected..."></textarea>
         <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
             <button class="btn btn-outline" onclick="closeFeedbackModal()">Cancel</button>
-            <button class="btn-feedback-submit" onclick="submitRejectionWithFeedback()">
+             <button class="btn-feedback-submit" onclick="submitRejectionWithFeedback()" type="button">
                 <i class="fas fa-times"></i> Reject with Feedback
             </button>
         </div>
@@ -883,7 +936,7 @@ function closeModal(id) {
 }
 window.closeModal = closeModal;
 document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }));
-
+document.getElementById('feedbackModal')?.addEventListener('click', e => { if (e.target === document.getElementById('feedbackModal')) closeFeedbackModal(); });
 // Format timestamp helper
 function formatTimestamp(ts) {
     if (!ts) return '—';
@@ -1718,6 +1771,8 @@ window.submitRejectionWithFeedback = async function() {
     closeFeedbackModal();
     toast('❌ Request rejected with feedback');
 };
+// Add click-outside-to-close for feedback modal
+
 
 // ===== APPROVE COLLECTION (with admin response) =====
 window.approveCollection = async function(approvalKey) {
