@@ -6,6 +6,11 @@
     <title>Admin Portal | CampusVault</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+    <!-- Link the manifest -->
+    <link rel="manifest" href="manifest.json">
+    
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -788,6 +793,13 @@
 
     <div class="modal-overlay" id="collectionModal"><div class="modal-content"><h3>Collect Items</h3><form onsubmit="submitCollection(event)"><input type="hidden" id="collectBookingKey"><div class="form-group"><label>Booking ID</label><input type="text" id="collectBookingId" readonly></div><div class="form-group"><label>Customer</label><input type="text" id="collectCustomerName" readonly></div><div class="form-group"><label>Items</label><input type="text" id="collectItems" readonly></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button type="button" class="btn btn-outline" onclick="closeModal('collectionModal')">Cancel</button><button type="submit" class="btn btn-success">Confirm</button></div></form></div></div>
     <div class="modal-overlay" id="backupModal"><div class="modal-content"><h3>Backup</h3><div class="form-group"><label>Format</label><select id="backupFormat"><option value="excel">Excel</option><option value="pdf">PDF</option></select></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button class="btn btn-outline" onclick="closeModal('backupModal')">Cancel</button><button class="btn btn-primary" onclick="startBackup()">Generate</button></div></div></div>
+
+
+
+    <!-- The button is hidden by default until Chrome confirms the app can be installed -->
+<button id="installBtn" style="display: none; padding: 10px 20px; font-size: 16px; cursor: pointer;">
+  📥 Install App
+</button>
 
 <script>
 // Firebase initialization
@@ -1652,6 +1664,52 @@ window.addEventListener('popstate', function(e) {
     const pm = document.querySelector('.preview-modal');
     if (pm) { pm.remove(); document.body.style.overflow = ''; e.preventDefault(); }
 });
+
+
+
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+
+    let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+// 1. Listen for the Chrome install prompt event
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome from automatically showing the prompt
+  e.preventDefault();
+  // Save the event for later execution
+  deferredPrompt = e;
+  // Make your custom install button visible
+  installBtn.style.display = 'block';
+});
+
+// 2. Trigger the install prompt when clicked
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  
+  // Show the Chrome install dialog
+  deferredPrompt.prompt();
+  
+  // Wait for the user's choice
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log(`User response to install: ${outcome}`);
+  
+  // Reset the prompt variable (it can only be used once)
+  deferredPrompt = null;
+  // Hide the button again
+  installBtn.style.display = 'none';
+});
+
+// 3. Optional: Hide button if the app is successfully installed
+window.addEventListener('appinstalled', () => {
+  console.log('PWA was installed successfully!');
+  installBtn.style.display = 'none';
+});
+
+
+    
 </script>
 </body>
 </html>
