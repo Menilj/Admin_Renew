@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-
     <!-- Link the manifest -->
     <link rel="manifest" href="manifest.json">
     
@@ -1610,16 +1609,73 @@ document.querySelectorAll('.sidebar nav a[data-tab]').forEach(l => {
     });
 });
 
-// Load all data
+// ===== LOAD ALL DATA =====
 function loadAllData() {
-    refs.bookings.on('value', s => { allBookings = []; s.forEach(c => { const v = c.val(); v._key = c.key; allBookings.push(v); }); renderStorage(allBookings); updateMetrics(); });
-    refs.received.orderByChild('timestamp').limitToLast(200).on('value', s => { allReceived = []; s.forEach(c => allReceived.unshift({ key: c.key, ...c.val() })); renderReceived(allReceived); updateMetrics(); calcPerf(); });
-    refs.collected.orderByChild('timestamp').limitToLast(200).on('value', s => { allCollected = []; s.forEach(c => allCollected.unshift({ key: c.key, ...c.val() })); renderCollected(allCollected); updateMetrics(); calcPerf(); });
-    refs.trash.on('value', s => { allTrash = []; s.forEach(c => allTrash.unshift({ key: c.key, ...c.val() })); renderTrash(allTrash); updateMetrics(); });
-    loadPending(); loadRecords(); loadReviews(); loadLogs();
+    // Load bookings
+    refs.bookings.on('value', s => { 
+        allBookings = []; 
+        s.forEach(c => { 
+            const v = c.val(); 
+            v._key = c.key; 
+            allBookings.push(v); 
+        }); 
+        renderStorage(allBookings); 
+        updateMetrics(); 
+    });
+    
+    // Load received items - THIS IS THE KEY FIX
+    // Use 'value' event instead of 'child_added' to ensure all items are loaded
+    refs.received.orderByChild('timestamp').limitToLast(200).on('value', s => { 
+        allReceived = []; 
+        s.forEach(c => {
+            const val = c.val();
+            val.key = c.key;  // Store the Firebase key
+            allReceived.push(val);
+        });
+        // Sort by timestamp (newest first)
+        allReceived.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        renderReceived(allReceived); 
+        updateMetrics(); 
+        calcPerf(); 
+    });
+    
+    // Load collected items
+    refs.collected.orderByChild('timestamp').limitToLast(200).on('value', s => { 
+        allCollected = []; 
+        s.forEach(c => {
+            const val = c.val();
+            val.key = c.key;
+            allCollected.push(val);
+        });
+        allCollected.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        renderCollected(allCollected); 
+        updateMetrics(); 
+        calcPerf(); 
+    });
+    
+    // Load trash
+    refs.trash.on('value', s => { 
+        allTrash = []; 
+        s.forEach(c => {
+            const val = c.val();
+            val.key = c.key;
+            allTrash.push(val);
+        });
+        renderTrash(allTrash); 
+        updateMetrics(); 
+    });
+    
+    // Load pending approvals
+    loadPending(); 
+    loadRecords(); 
+    loadReviews(); 
+    loadLogs();
+    
+    // Load staff and admins
     refs.staff.on('value', () => { loadStaffList(); calcPerf(); });
     refs.admins.on('value', () => loadAdmins());
-    loadStaffList(); loadAdmins();
+    loadStaffList(); 
+    loadAdmins();
 }
 
 function setVH() { document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
@@ -1632,51 +1688,33 @@ window.addEventListener('popstate', function(e) {
     if (pm) { pm.remove(); document.body.style.overflow = ''; e.preventDefault(); }
 });
 
-
-
-
-  if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
-  }
+}
 
-    let deferredPrompt;
+let deferredPrompt;
 const installBtn = document.getElementById('installBtn');
 
-// 1. Listen for the Chrome install prompt event
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent Chrome from automatically showing the prompt
-  e.preventDefault();
-  // Save the event for later execution
-  deferredPrompt = e;
-  // Make your custom install button visible
-  installBtn.style.display = 'block';
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
 });
 
-// 2. Trigger the install prompt when clicked
 installBtn.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  
-  // Show the Chrome install dialog
-  deferredPrompt.prompt();
-  
-  // Wait for the user's choice
-  const { outcome } = await deferredPrompt.userChoice;
-  console.log(`User response to install: ${outcome}`);
-  
-  // Reset the prompt variable (it can only be used once)
-  deferredPrompt = null;
-  // Hide the button again
-  installBtn.style.display = 'none';
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install: ${outcome}`);
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
 });
 
-// 3. Optional: Hide button if the app is successfully installed
 window.addEventListener('appinstalled', () => {
-  console.log('PWA was installed successfully!');
-  installBtn.style.display = 'none';
+    console.log('PWA was installed successfully!');
+    installBtn.style.display = 'none';
 });
 
-
-    
 </script>
 </body>
 </html>
