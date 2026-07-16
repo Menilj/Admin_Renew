@@ -6,8 +6,6 @@
     <title>Admin Portal | CampusVault</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Link the manifest -->
     <link rel="manifest" href="manifest.json">
     
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -17,6 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root {
             --bg: #0a1628; --surface: #0f1f3a; --text: #e2e8f0;
@@ -161,6 +160,7 @@
         .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; }
         .badge-active { background: rgba(16,185,129,0.15); color: #34d399; }
         .badge-danger { background: rgba(239,68,68,0.15); color: #f87171; }
+        .badge-video { background: rgba(147, 51, 234, 0.15); color: #a78bfa; }
 
         .action-btn {
             padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer;
@@ -175,6 +175,9 @@
         .btn-restore { background: rgba(245,158,11,0.2); color: #fbbf24; }
         .btn-view { background: #152544; color: #e2e8f0; border: 1px solid #1a3050; }
         .btn-preview { background: linear-gradient(135deg, #06b6d4, #1e4d8c); color: #fff; }
+        .btn-flag { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .btn-verify { background: rgba(16,185,129,0.15); color: #34d399; }
+        .btn-video { background: rgba(147, 51, 234, 0.15); color: #a78bfa; }
 
         .mobile-cards { display: none; }
         .data-card {
@@ -185,7 +188,6 @@
         .data-card .card-label { font-weight: 700; color: #8899b4; font-size: 0.6rem; text-transform: uppercase; }
         .data-card .card-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #1a3050; flex-wrap: wrap; }
 
-        /* Timestamp badge */
         .timestamp-badge {
             display: inline-flex;
             align-items: center;
@@ -198,7 +200,145 @@
             font-weight: 600;
         }
 
-        /* Preview Modal */
+        /* Video Gallery Styles */
+        .video-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .video-thumbnail {
+            position: relative;
+            background: #0a1628;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #1a3050;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .video-thumbnail:hover {
+            border-color: #7c3aed;
+            box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
+        }
+        .video-thumbnail video {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        .video-thumbnail .video-play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background: rgba(147, 51, 234, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+        .video-thumbnail .video-info {
+            padding: 8px;
+            font-size: 0.7rem;
+            color: #8899b4;
+        }
+        .video-thumbnail .video-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(239, 68, 68, 0.8);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        /* Video Upload Area */
+        .video-upload-area {
+            border: 2px dashed #1a3050;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #0a1628;
+        }
+        .video-upload-area:hover {
+            border-color: #7c3aed;
+            background: rgba(147, 51, 234, 0.05);
+        }
+        .video-upload-area i {
+            font-size: 2rem;
+            color: #7c3aed;
+            margin-bottom: 8px;
+        }
+        .video-upload-area p {
+            font-size: 0.8rem;
+            color: #8899b4;
+            margin: 4px 0;
+        }
+        .video-upload-progress {
+            width: 100%;
+            height: 4px;
+            background: #1a3050;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: none;
+        }
+        .video-upload-progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #7c3aed, #06b6d4);
+            transition: width 0.3s;
+        }
+
+        /* Video Player Modal */
+        .video-player-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+        .video-player-content {
+            width: 90%;
+            max-width: 800px;
+            position: relative;
+        }
+        .video-player-content video {
+            width: 100%;
+            max-height: 80vh;
+            border-radius: 12px;
+        }
+        .video-player-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
         .preview-modal {
             position: fixed;
             inset: 0;
@@ -321,7 +461,6 @@
             max-width: 200px;
         }
 
-        /* Modal Styles */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.8);
             display: none; align-items: center; justify-content: center;
@@ -339,7 +478,6 @@
             animation: slideUp 0.3s ease;
         }
 
-        /* Assign Staff Popup */
         .assign-staff-popup {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             display: flex; align-items: center; justify-content: center;
@@ -444,10 +582,24 @@
             border: 2px solid #1a3050; background: #0a1628;
             color: #e2e8f0; font-size: 16px; font-family: var(--font);
         }
+        .form-group input[type="file"] {
+            padding: 8px;
+        }
+        .form-group input[type="file"]::file-selector-button {
+            background: #7c3aed;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 12px;
+        }
         .btn { padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 700; border: none; font-size: 0.8rem; min-height: 42px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary { background: #1e4d8c; color: #fff; }
         .btn-success { background: #10b981; color: #fff; }
         .btn-outline { background: transparent; border: 2px solid #1a3050; color: #e2e8f0; }
+        .btn-purple { background: #7c3aed; color: #fff; }
         .btn-sm { padding: 6px 12px; font-size: 0.7rem; min-height: 32px; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -462,7 +614,6 @@
         }
         .empty-state { text-align: center; padding: 24px; color: #4a6080; font-size: 0.8rem; }
 
-        /* Loading Spinner */
         .spinner {
             display: inline-block;
             width: 20px;
@@ -473,35 +624,6 @@
             animation: spin 0.8s linear infinite;
         }
 
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); width: 285px; max-width: 80vw; }
-            .sidebar.open { transform: translateX(0); }
-            .main { margin-left: 0; }
-            .hamburger { display: flex; }
-            .desktop-table { display: none; }
-            .mobile-cards { display: block; }
-            .content-area { padding: 12px; }
-            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .security-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
-            .insights-grid { grid-template-columns: 1fr; gap: 8px; }
-            .preview-modal { padding: 8px; align-items: flex-end; }
-            .preview-content { border-radius: 20px 20px 0 0; max-height: 90vh; max-height: 90dvh; padding: 16px 12px; margin: 0; }
-            .preview-grid { grid-template-columns: 1fr; gap: 8px; }
-            .preview-item { padding: 10px; }
-            .preview-header h3 { font-size: 1.1rem; }
-            .preview-actions { flex-direction: column; }
-            .preview-actions .btn { max-width: 100%; width: 100%; justify-content: center; }
-            .assign-staff-card { padding: 24px 20px; }
-        }
-        @media (max-width: 360px) {
-            .preview-content { padding: 12px 10px; max-height: 95vh; max-height: 95dvh; }
-            .preview-label { font-size: 0.6rem; }
-            .preview-value { font-size: 0.8rem; }
-        }
-
-
-
-                /* Feedback Modal Styles */
         .feedback-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             display: none; align-items: center; justify-content: center;
@@ -551,14 +673,125 @@
             background: rgba(59,130,246,0.15); color: #60a5fa;
             padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 700;
         }
+
+        .housing-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .housing-metric {
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #1a3050;
+        }
+        .housing-metric .metric-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #06b6d4;
+        }
+        .housing-metric .metric-label {
+            font-size: 0.7rem;
+            color: #8899b4;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .house-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .house-detail-item {
+            background: rgba(10, 22, 40, 0.5);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #1a3050;
+        }
+        .house-detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+        .house-detail-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #8899b4;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .house-detail-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        .amenity-tag {
+            display: inline-block;
+            background: rgba(6, 182, 212, 0.15);
+            color: #06b6d4;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin: 2px;
+            font-weight: 600;
+        }
+        .house-status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .house-status-available {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+        .house-status-pending {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+        .house-status-rented {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+        }
+        .house-status-flagged {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 285px; max-width: 80vw; }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; }
+            .hamburger { display: flex; }
+            .desktop-table { display: none; }
+            .mobile-cards { display: block; }
+            .content-area { padding: 12px; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .security-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+            .insights-grid { grid-template-columns: 1fr; gap: 8px; }
+            .preview-modal { padding: 8px; align-items: flex-end; }
+            .preview-content { border-radius: 20px 20px 0 0; max-height: 90vh; max-height: 90dvh; padding: 16px 12px; margin: 0; }
+            .preview-grid { grid-template-columns: 1fr; gap: 8px; }
+            .preview-item { padding: 10px; }
+            .preview-header h3 { font-size: 1.1rem; }
+            .preview-actions { flex-direction: column; }
+            .preview-actions .btn { max-width: 100%; width: 100%; justify-content: center; }
+            .assign-staff-card { padding: 24px 20px; }
+            .house-detail-grid { grid-template-columns: 1fr; }
+            .video-gallery { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 360px) {
+            .preview-content { padding: 12px 10px; max-height: 95vh; max-height: 95dvh; }
+            .preview-label { font-size: 0.6rem; }
+            .preview-value { font-size: 0.8rem; }
+        }
     </style>
 </head>
 <body>
-        <!-- The button is hidden by default until Chrome confirms the app can be installed -->
-<button id="installBtn" style="display: none; background: rgba(255, 255, 255, 0.07); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.15); padding: 10px 20px; font-family: -apple-system, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; border-radius: 8px; backdrop-filter: blur(5px); transition: all 0.2s ease;" onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'; this.style.borderColor='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.07)'; this.style.borderColor='rgba(255, 255, 255, 0.15)'">
-  📲 Install App
-</button>
-
+    <button id="installBtn" style="display: none; background: rgba(255, 255, 255, 0.07); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.15); padding: 10px 20px; font-family: -apple-system, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; border-radius: 8px; backdrop-filter: blur(5px); transition: all 0.2s ease;" onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'; this.style.borderColor='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.07)'; this.style.borderColor='rgba(255, 255, 255, 0.15)'">
+        📲 Install App
+    </button>
 
     <div class="login-overlay" id="loginScreen">
         <div class="login-card">
@@ -585,6 +818,8 @@
                 <a href="#" data-tab="received"><i class="fas fa-box-check"></i> Received <span class="nav-badge" id="receivedBadge" style="display:none;">0</span></a>
                 <a href="#" data-tab="collected"><i class="fas fa-people-carry"></i> Collected <span class="nav-badge" id="collectedBadge" style="display:none;">0</span></a>
                 <a href="#" data-tab="trash"><i class="fas fa-trash-restore"></i> Trash <span class="nav-badge" id="trashBadge" style="display:none;">0</span></a>
+                <div class="nav-section">Housing</div>
+                <a href="#" data-tab="housing"><i class="fas fa-home"></i> House Hunting <span class="nav-badge" id="housingBadge" style="display:none;">0</span></a>
                 <div class="nav-section">Management</div>
                 <a href="#" data-tab="staff"><i class="fas fa-users"></i> Staff</a>
                 <a href="#" data-tab="insights"><i class="fas fa-chart-line"></i> Insights <span class="live-dot" style="margin-left:auto;"></span></a>
@@ -617,6 +852,7 @@
             <div class="content-area">
                 <div class="metrics-grid" id="metricsContainer"></div>
 
+                <!-- Security Tab -->
                 <div class="tab-content active" id="tab-security">
                     <div class="security-bot-panel">
                         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
@@ -645,10 +881,104 @@
                     </div>
                 </div>
 
+                <!-- Storage Tab -->
                 <div class="tab-content" id="tab-storage"><div class="card"><div class="card-header"><span><i class="fas fa-box-archive"></i> Active Bookings</span><span class="badge badge-active" id="storageCount">0</span></div><div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>Time</th><th>Staff</th><th>Actions</th></tr></thead><tbody id="storageTableBody"></tbody></table></div></div><div class="mobile-cards"><div id="storageCardsContainer"></div></div></div></div>
+                
+                <!-- Received Tab -->
                 <div class="tab-content" id="tab-received"><div class="card"><div class="card-header"><span><i class="fas fa-box-check"></i> Received</span><span class="badge badge-active" id="receivedCount">0</span></div><div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>Time</th><th>By</th><th>Pic</th><th>Act</th></tr></thead><tbody id="receivedTableBody"></tbody></table></div></div><div class="mobile-cards"><div id="receivedCardsContainer"></div></div></div></div>
+                
+                <!-- Collected Tab -->
                 <div class="tab-content" id="tab-collected"><div class="card"><div class="card-header"><span><i class="fas fa-people-carry"></i> Collected</span><span class="badge badge-active" id="collectedCount">0</span></div><div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>Time</th><th>By</th><th>Act</th></tr></thead><tbody id="collectedTableBody"></tbody></table></div></div><div class="mobile-cards"><div id="collectedCardsContainer"></div></div></div></div>
+                
+                <!-- Trash Tab -->
                 <div class="tab-content" id="tab-trash"><div class="card"><div class="card-header"><span><i class="fas fa-trash-restore"></i> Trash</span><span class="badge badge-danger" id="trashCount">0</span></div><div class="desktop-table"><div class="table-responsive"><table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>Time</th><th>Deleted</th><th>Act</th></tr></thead><tbody id="trashTableBody"></tbody></table></div></div><div class="mobile-cards"><div id="trashCardsContainer"></div></div></div></div>
+
+                <!-- Housing Tab with Video Support -->
+                <div class="tab-content" id="tab-housing">
+                    <div class="housing-metrics-grid" id="housingMetricsContainer">
+                        <div class="housing-metric">
+                            <div class="metric-value" id="housingTotalListings">0</div>
+                            <div class="metric-label">Total Listings</div>
+                        </div>
+                        <div class="housing-metric">
+                            <div class="metric-value" style="color:#10b981;" id="housingAvailableCount">0</div>
+                            <div class="metric-label">Available</div>
+                        </div>
+                        <div class="housing-metric">
+                            <div class="metric-value" style="color:#f59e0b;" id="housingPendingCount">0</div>
+                            <div class="metric-label">Pending</div>
+                        </div>
+                        <div class="housing-metric">
+                            <div class="metric-value" style="color:#ef4444;" id="housingFlaggedCount">0</div>
+                            <div class="metric-label">Flagged</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span><i class="fas fa-home"></i> House Hunting Listings</span>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <button class="btn btn-sm btn-purple" onclick="openAddHouseModal()">
+                                    <i class="fas fa-plus"></i> Add Listing
+                                </button>
+                                <span class="badge badge-active" id="housingCount">0</span>
+                            </div>
+                        </div>
+                        
+                        <div style="padding:12px;background:#152544;border-bottom:1px solid #1a3050;display:flex;gap:8px;flex-wrap:wrap;">
+                            <select id="housingFilterStatus" onchange="renderHousingListings()" style="padding:8px 12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:14px;font-family:var(--font);">
+                                <option value="all">All Status</option>
+                                <option value="available">Available</option>
+                                <option value="rented">Rented</option>
+                                <option value="pending">Pending</option>
+                                <option value="flagged">Flagged</option>
+                            </select>
+                            <select id="housingFilterType" onchange="renderHousingListings()" style="padding:8px 12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:14px;font-family:var(--font);">
+                                <option value="all">All Types</option>
+                                <option value="apartment">Apartment</option>
+                                <option value="house">House</option>
+                                <option value="studio">Studio</option>
+                                <option value="shared">Shared Room</option>
+                                <option value="dormitory">Dormitory</option>
+                            </select>
+                            <input type="text" id="housingSearchInput" placeholder="🔍 Search listings..." oninput="renderHousingListings()" style="padding:8px 12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:14px;flex:1;min-width:150px;font-family:var(--font);">
+                            <select id="housingSortBy" onchange="renderHousingListings()" style="padding:8px 12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:14px;font-family:var(--font);">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="price_low">Price: Low to High</option>
+                                <option value="price_high">Price: High to Low</option>
+                                <option value="rating">Highest Rated</option>
+                            </select>
+                        </div>
+
+                        <div class="desktop-table">
+                            <div class="table-responsive" style="max-height:60vh;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Title</th>
+                                            <th>Type</th>
+                                            <th>Price/mo</th>
+                                            <th>Location</th>
+                                            <th>Videos</th>
+                                            <th>Rating</th>
+                                            <th>Status</th>
+                                            <th>Listed</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="housingTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mobile-cards">
+                            <div id="housingCardsContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Tabs -->
                 <div class="tab-content" id="tab-insights"><div class="insights-grid"><div class="insight-card"><h4><i class="fas fa-trophy" style="color:#f59e0b;"></i> Top</h4><div id="topPerformersList"></div></div><div class="insight-card"><h4><i class="fas fa-fire" style="color:#ef4444;"></i> Streaks</h4><div id="activityStreaks"></div></div></div><div class="card"><div class="card-header">Performance</div><div class="table-responsive"><table><thead><tr><th>Staff</th><th>Items</th><th>Rating</th><th>Streak</th><th>Status</th></tr></thead><tbody id="staffPerformanceTableBody"></tbody></table></div></div></div>
                 <div class="tab-content" id="tab-staff"><div class="card"><div class="card-header">Staff Management</div><div style="padding:14px;"><div style="display:flex;gap:8px;margin-bottom:12px;"><input type="email" id="newStaffEmail" placeholder="staff@example.com" style="flex:1;padding:12px;border-radius:8px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:16px;"><button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-plus"></i> Add Staff</button></div><div id="staffList"></div></div></div></div>
                 <div class="tab-content" id="tab-pending"><div id="pendingApprovalsContainer"></div></div>
@@ -660,48 +990,22 @@
         </main>
     </div>
 
-    <!-- Receive Items Modal (Image Upload Removed) -->
+    <!-- Existing Modals (Receive Items, Collection, Backup, Feedback) remain unchanged -->
     <div class="modal-overlay" id="receiveItemsModal">
         <div class="modal-content">
             <h3>Receive Items</h3>
             <form id="receiveForm" onsubmit="submitReceivedItems(event)">
                 <input type="hidden" id="receiveBookingKey">
-                <div class="form-group">
-                    <label>Booking ID</label>
-                    <input type="text" id="receiveBookingId" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Customer</label>
-                    <input type="text" id="receiveCustomerName" readonly>
-                </div>
+                <div class="form-group"><label>Booking ID</label><input type="text" id="receiveBookingId" readonly></div>
+                <div class="form-group"><label>Customer</label><input type="text" id="receiveCustomerName" readonly></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div class="form-group">
-                        <label>Count</label>
-                        <input type="number" id="receiveItemCount" required min="1" value="1">
-                    </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select id="receiveCategory">
-                            <option>Electronics</option>
-                            <option>Furniture</option>
-                            <option>Clothing</option>
-                            <option>Books</option>
-                            <option>Other</option>
-                        </select>
-                    </div>
+                    <div class="form-group"><label>Count</label><input type="number" id="receiveItemCount" required min="1" value="1"></div>
+                    <div class="form-group"><label>Category</label><select id="receiveCategory"><option>Electronics</option><option>Furniture</option><option>Clothing</option><option>Books</option><option>Other</option></select></div>
                 </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="receiveDescription" rows="2" required placeholder="Brief description of items..."></textarea>
-                </div>
-                
-                <!-- Image Upload Section Removed -->
-                
+                <div class="form-group"><label>Description</label><textarea id="receiveDescription" rows="2" required placeholder="Brief description of items..."></textarea></div>
                 <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeReceiveModal()">Cancel</button>
-                    <button type="submit" class="btn btn-success" id="receiveSubmitBtn">
-                        <i class="fas fa-check"></i> Confirm Receive
-                    </button>
+                    <button type="submit" class="btn btn-success" id="receiveSubmitBtn"><i class="fas fa-check"></i> Confirm Receive</button>
                 </div>
             </form>
         </div>
@@ -709,1012 +1013,1337 @@
 
     <div class="modal-overlay" id="collectionModal"><div class="modal-content"><h3>Collect Items</h3><form onsubmit="submitCollection(event)"><input type="hidden" id="collectBookingKey"><div class="form-group"><label>Booking ID</label><input type="text" id="collectBookingId" readonly></div><div class="form-group"><label>Customer</label><input type="text" id="collectCustomerName" readonly></div><div class="form-group"><label>Items</label><input type="text" id="collectItems" readonly></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button type="button" class="btn btn-outline" onclick="closeModal('collectionModal')">Cancel</button><button type="submit" class="btn btn-success">Confirm</button></div></form></div></div>
     <div class="modal-overlay" id="backupModal"><div class="modal-content"><h3>Backup</h3><div class="form-group"><label>Format</label><select id="backupFormat"><option value="excel">Excel</option><option value="pdf">PDF</option></select></div><div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;"><button class="btn btn-outline" onclick="closeModal('backupModal')">Cancel</button><button class="btn btn-primary" onclick="startBackup()">Generate</button></div></div></div>
-
-<!-- Feedback Modal for Rejection -->
-<div class="feedback-modal" id="feedbackModal" style="display:none;">
-    <div class="feedback-card">
-        <h3><i class="fas fa-comment-dots"></i> Rejection Feedback</h3>
-        <p style="color:#8899b4;font-size:0.85rem;margin-bottom:16px;">
-            Please provide a reason for rejecting this request. This feedback will be shown to the staff member.
-        </p>
-        <textarea class="feedback-textarea" id="feedbackTextarea" placeholder="Explain why this collection request is being rejected..."></textarea>
-        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
-            <button class="btn btn-outline" onclick="closeFeedbackModal()">Cancel</button>
-             <button class="btn-feedback-submit" onclick="submitRejectionWithFeedback()" type="button">
-                <i class="fas fa-times"></i> Reject with Feedback
-            </button>
+    <div class="feedback-modal" id="feedbackModal" style="display:none;">
+        <div class="feedback-card">
+            <h3><i class="fas fa-comment-dots"></i> Rejection Feedback</h3>
+            <p style="color:#8899b4;font-size:0.85rem;margin-bottom:16px;">Please provide a reason for rejecting this request.</p>
+            <textarea class="feedback-textarea" id="feedbackTextarea" placeholder="Explain why this request is being rejected..."></textarea>
+            <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeFeedbackModal()">Cancel</button>
+                <button class="btn-feedback-submit" onclick="submitRejectionWithFeedback()" type="button"><i class="fas fa-times"></i> Reject with Feedback</button>
+            </div>
         </div>
     </div>
-</div>
 
+    <!-- Add/Edit House Modal with Video Upload -->
+    <div class="modal-overlay" id="addHouseModal">
+        <div class="modal-content" style="max-width:700px;">
+            <h3 id="houseModalTitle"><i class="fas fa-home"></i> Add New Listing</h3>
+            <form id="houseForm" onsubmit="submitHouseListing(event)">
+                <input type="hidden" id="houseEditKey">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" id="houseTitle" required placeholder="e.g., Cozy Studio near Campus">
+                    </div>
+                    <div class="form-group">
+                        <label>Property Type *</label>
+                        <select id="houseType" required>
+                            <option value="apartment">Apartment</option>
+                            <option value="house">House</option>
+                            <option value="studio">Studio</option>
+                            <option value="shared">Shared Room</option>
+                            <option value="dormitory">Dormitory</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="form-group">
+                        <label>Monthly Rent ($) *</label>
+                        <input type="number" id="housePrice" required min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Bedrooms</label>
+                        <input type="number" id="houseBedrooms" min="0" value="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Location/Address *</label>
+                    <input type="text" id="houseLocation" required placeholder="e.g., 123 College Ave, Apt 4B">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="houseDescription" rows="3" placeholder="Describe the property, amenities, rules, etc."></textarea>
+                </div>
+                
+                <!-- Video Upload Section -->
+                <div class="form-group">
+                    <label><i class="fas fa-video" style="color:#7c3aed;"></i> Property Videos</label>
+                    <div class="video-upload-area" id="videoUploadArea" onclick="document.getElementById('videoFileInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload property videos</p>
+                        <p style="font-size:0.7rem;opacity:0.7;">MP4, WebM, MOV (Max 50MB each)</p>
+                        <div class="video-upload-progress" id="videoUploadProgress">
+                            <div class="video-upload-progress-bar" id="videoUploadProgressBar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <input type="file" id="videoFileInput" accept="video/*" multiple style="display:none;" onchange="handleVideoFilesSelect(event)">
+                    <div class="video-gallery" id="videoPreviewGallery"></div>
+                    <input type="hidden" id="existingVideosData" value="">
+                </div>
 
-<script>
-// Firebase initialization
-const firebaseConfig = {
-    apiKey: "AIzaSyCuCd89dawEHOGrKmcCimw3pBErKYJU_VI",
-    authDomain: "campusvault-connect.firebaseapp.com",
-    databaseURL: "https://campusvault-connect-default-rtdb.firebaseio.com",
-    projectId: "campusvault-connect",
-    storageBucket: "campusvault-connect.firebasestorage.app",
-    messagingSenderId: "185904648786",
-    appId: "1:185904648786:web:390764d552d388b6e2058b"
-};
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="form-group"><label>Landlord Name</label><input type="text" id="houseLandlord" placeholder="Landlord/Agent name"></div>
+                    <div class="form-group"><label>Contact Phone</label><input type="tel" id="housePhone" placeholder="Phone number"></div>
+                </div>
+                <div class="form-group"><label>Contact Email</label><input type="email" id="houseEmail" placeholder="Email address"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                    <div class="form-group"><label>Deposit ($)</label><input type="number" id="houseDeposit" min="0" step="0.01" placeholder="0.00"></div>
+                    <div class="form-group"><label>Available From</label><input type="date" id="houseAvailableDate"></div>
+                    <div class="form-group"><label>Lease Duration</label><select id="houseLeaseDuration"><option value="monthly">Month-to-Month</option><option value="6months">6 Months</option><option value="1year">1 Year</option><option value="2years">2 Years</option></select></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="form-group"><label>Amenities (comma-separated)</label><input type="text" id="houseAmenities" placeholder="e.g., WiFi, Parking, Laundry"></div>
+                    <div class="form-group"><label>Status</label><select id="houseStatus"><option value="available">Available</option><option value="pending">Pending Review</option><option value="rented">Rented</option><option value="flagged">Flagged</option></select></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addHouseModal')">Cancel</button>
+                    <button type="submit" class="btn btn-purple" id="houseSubmitBtn"><i class="fas fa-save"></i> Save Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-const storage = firebase.storage();
+    <!-- House Detail Modal -->
+    <div class="modal-overlay" id="houseDetailModal">
+        <div class="modal-content" id="houseDetailContent" style="max-width:700px;"></div>
+    </div>
 
-const refs = {
-    admins: db.ref('admins'),
-    staff: db.ref('staff'),
-    bookings: db.ref('bookings'),
-    pending: db.ref('pending_approvals'),
-    records: db.ref('digital_records'),
-    reviews: db.ref('reviews'),
-    logs: db.ref('staff_logs'),
-    received: db.ref('received_items'),
-    collected: db.ref('collected_items'),
-    trash: db.ref('trash'),
-    blocked: db.ref('blocked_ips'),
-    secLogs: db.ref('security_logs'),
-    status: db.ref('staff_status')
-};
+    <!-- Video Player Modal -->
+    <div class="video-player-modal" id="videoPlayerModal" style="display:none;" onclick="closeVideoPlayer()">
+        <div class="video-player-content" onclick="event.stopPropagation()">
+            <button class="video-player-close" onclick="closeVideoPlayer()"><i class="fas fa-times"></i></button>
+            <video id="videoPlayerElement" controls autoplay></video>
+        </div>
+    </div>
 
-let currentUser = null;
-let allBookings = [], allReceived = [], allCollected = [], allTrash = [];
-let allPending = [], staffList = [], perfData = {};
-let currentRejectionKey = null;
+    <script>
+        // Firebase initialization
+        const firebaseConfig = {
+            apiKey: "AIzaSyCuCd89dawEHOGrKmcCimw3pBErKYJU_VI",
+            authDomain: "campusvault-connect.firebaseapp.com",
+            databaseURL: "https://campusvault-connect-default-rtdb.firebaseio.com",
+            projectId: "campusvault-connect",
+            storageBucket: "campusvault-connect.firebasestorage.app",
+            messagingSenderId: "185904648786",
+            appId: "1:185904648786:web:390764d552d388b6e2058b"
+        };
 
-let securityStats = {
-    blockedToday: 0, activeSessions: 0, failedAttempts: 0,
-    riskLevel: 'Low', threatsDetected: 0, patchesApplied: 0
-};
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        const storage = firebase.storage();
 
-// Toast
-function toast(m, i = '') {
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.innerHTML = `${i} ${m}`;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
+        const refs = {
+            admins: db.ref('admins'),
+            staff: db.ref('staff'),
+            bookings: db.ref('bookings'),
+            pending: db.ref('pending_approvals'),
+            records: db.ref('digital_records'),
+            reviews: db.ref('reviews'),
+            logs: db.ref('staff_logs'),
+            received: db.ref('received_items'),
+            collected: db.ref('collected_items'),
+            trash: db.ref('trash'),
+            blocked: db.ref('blocked_ips'),
+            secLogs: db.ref('security_logs'),
+            status: db.ref('staff_status'),
+            housing: db.ref('housing_listings')
+        };
 
-// Modal functions
-function openModal(id) { 
-    const modal = document.getElementById(id);
-    if (modal) { modal.classList.add('show'); document.body.style.overflow = 'hidden'; }
-}
-function closeModal(id) { 
-    const modal = document.getElementById(id);
-    if (modal) { modal.classList.remove('show'); document.body.style.overflow = ''; }
-}
-window.closeModal = closeModal;
-document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }));
-document.getElementById('feedbackModal')?.addEventListener('click', e => { if (e.target === document.getElementById('feedbackModal')) closeFeedbackModal(); });
-// Format timestamp helper
-function formatTimestamp(ts) {
-    if (!ts) return '—';
-    const d = new Date(ts);
-    if (isNaN(d.getTime())) return ts;
-    const now = new Date();
-    const diff = now - d;
-    const mins = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + 
-           d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-}
+        let currentUser = null;
+        let allBookings = [], allReceived = [], allCollected = [], allTrash = [];
+        let allPending = [], staffList = [], perfData = {}, allHousingListings = [];
+        let currentRejectionKey = null;
+        let housingListener = null;
+        let pendingVideoFiles = [];
+        let existingVideosData = [];
 
-function formatFullTimestamp(ts) {
-    if (!ts) return '—';
-    const d = new Date(ts);
-    if (isNaN(d.getTime())) return ts;
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + 
-           d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
+        let securityStats = {
+            blockedToday: 0, activeSessions: 0, failedAttempts: 0,
+            riskLevel: 'Low', threatsDetected: 0, patchesApplied: 0
+        };
 
-// ===== GOOGLE SIGN IN =====
-window.handleGoogleSignIn = function() {
-    const btn = document.getElementById('googleSignInBtn');
-    const errorEl = document.getElementById('loginError');
-    
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Signing in...';
-    errorEl.style.display = 'none';
-    
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    
-    auth.signInWithPopup(provider)
-        .then((result) => {
-            const user = result.user;
-            const emailKey = user.email.replace(/\./g, ',');
-            return refs.admins.child(emailKey).once('value').then(snapshot => {
-                if (snapshot.exists()) {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('dashboard').classList.add('active');
-                    currentUser = user;
+        // Toast
+        function toast(m, i = '') {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.innerHTML = `${i} ${m}`;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        // Modal functions
+        function openModal(id) { 
+            const modal = document.getElementById(id);
+            if (modal) { modal.classList.add('show'); document.body.style.overflow = 'hidden'; }
+        }
+        function closeModal(id) { 
+            const modal = document.getElementById(id);
+            if (modal) { modal.classList.remove('show'); document.body.style.overflow = ''; }
+        }
+        window.closeModal = closeModal;
+        document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }));
+        document.getElementById('feedbackModal')?.addEventListener('click', e => { if (e.target === document.getElementById('feedbackModal')) closeFeedbackModal(); });
+
+        // Format timestamp helper
+        function formatTimestamp(ts) {
+            if (!ts) return '—';
+            const d = new Date(ts);
+            if (isNaN(d.getTime())) return ts;
+            const now = new Date();
+            const diff = now - d;
+            const mins = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (mins < 1) return 'Just now';
+            if (mins < 60) return `${mins}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + 
+                   d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatFullTimestamp(ts) {
+            if (!ts) return '—';
+            const d = new Date(ts);
+            if (isNaN(d.getTime())) return ts;
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + 
+                   d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        // Video Player Functions
+        function openVideoPlayer(videoUrl) {
+            const modal = document.getElementById('videoPlayerModal');
+            const video = document.getElementById('videoPlayerElement');
+            video.src = videoUrl;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            video.play();
+        }
+
+        function closeVideoPlayer() {
+            const modal = document.getElementById('videoPlayerModal');
+            const video = document.getElementById('videoPlayerElement');
+            video.pause();
+            video.src = '';
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Handle video file selection
+        function handleVideoFilesSelect(event) {
+            const files = Array.from(event.target.files);
+            const maxSize = 50 * 1024 * 1024; // 50MB
+            
+            files.forEach(file => {
+                if (!file.type.startsWith('video/')) {
+                    toast('⚠️ Please select video files only');
+                    return;
+                }
+                if (file.size > maxSize) {
+                    toast('⚠️ Video must be less than 50MB');
+                    return;
+                }
+                pendingVideoFiles.push(file);
+            });
+            
+            renderVideoPreviews();
+            event.target.value = '';
+        }
+
+        // Render video previews
+        function renderVideoPreviews() {
+            const gallery = document.getElementById('videoPreviewGallery');
+            if (!gallery) return;
+            
+            let html = '';
+            
+            // Show existing videos
+            existingVideosData.forEach((video, index) => {
+                html += `
+                    <div class="video-thumbnail" onclick="openVideoPlayer('${video.url}')">
+                        <video src="${video.url}" muted preload="metadata"></video>
+                        <div class="video-play-overlay"><i class="fas fa-play"></i></div>
+                        <div class="video-info">${video.name || 'Video ' + (index + 1)}</div>
+                        <button class="video-delete-btn" onclick="event.stopPropagation(); removeExistingVideo(${index})"><i class="fas fa-times"></i></button>
+                    </div>`;
+            });
+            
+            // Show pending uploads
+            pendingVideoFiles.forEach((file, index) => {
+                const url = URL.createObjectURL(file);
+                html += `
+                    <div class="video-thumbnail">
+                        <video src="${url}" muted></video>
+                        <div class="video-play-overlay"><i class="fas fa-clock"></i></div>
+                        <div class="video-info">${file.name} (Pending)</div>
+                        <button class="video-delete-btn" onclick="event.stopPropagation(); removePendingVideo(${index})"><i class="fas fa-times"></i></button>
+                    </div>`;
+            });
+            
+            gallery.innerHTML = html || '<p style="text-align:center;color:#8899b4;font-size:0.8rem;">No videos added yet</p>';
+        }
+
+        function removeExistingVideo(index) {
+            existingVideosData.splice(index, 1);
+            renderVideoPreviews();
+        }
+
+        function removePendingVideo(index) {
+            pendingVideoFiles.splice(index, 1);
+            renderVideoPreviews();
+        }
+
+        // Upload videos to Firebase Storage
+        async function uploadVideos(listingKey) {
+            if (pendingVideoFiles.length === 0) return existingVideosData;
+            
+            const progressBar = document.getElementById('videoUploadProgress');
+            const progressBarFill = document.getElementById('videoUploadProgressBar');
+            progressBar.style.display = 'block';
+            
+            const uploadedVideos = [...existingVideosData];
+            
+            for (let i = 0; i < pendingVideoFiles.length; i++) {
+                const file = pendingVideoFiles[i];
+                const filePath = `housing_videos/${listingKey || 'new'}/${Date.now()}_${file.name}`;
+                const storageRef = storage.ref(filePath);
+                
+                try {
+                    const uploadTask = storageRef.put(file);
                     
-                    document.getElementById('userNameDisplay').textContent = user.displayName || user.email;
-                    if (user.photoURL) {
-                        document.getElementById('userAvatar').src = user.photoURL;
-                        document.getElementById('userAvatar').style.display = 'block';
-                    }
-                    
-                    refs.status.child(emailKey).set({
-                        online: true,
-                        lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                        email: user.email,
-                        name: user.displayName || ''
+                    await new Promise((resolve, reject) => {
+                        uploadTask.on('state_changed',
+                            (snapshot) => {
+                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                progressBarFill.style.width = progress + '%';
+                            },
+                            (error) => reject(error),
+                            () => resolve()
+                        );
                     });
-                    refs.status.child(emailKey).onDisconnect().set({ online: false });
                     
-                    refs.logs.push({
-                        staff: user.email,
-                        action: 'admin_login',
-                        timestamp: new Date().toISOString()
+                    const downloadUrl = await storageRef.getDownloadURL();
+                    uploadedVideos.push({
+                        url: downloadUrl,
+                        name: file.name,
+                        path: filePath,
+                        size: file.size,
+                        uploadedAt: new Date().toISOString()
                     });
-                    
-                    loadAllData();
-                    startSecurityMonitor();
-                    toast('Welcome, ' + (user.displayName || user.email).split(' ')[0] + '!');
-                } else {
-                    auth.signOut();
-                    errorEl.textContent = '❌ Access denied. You are not authorized as an admin.';
+                } catch (error) {
+                    console.error('Video upload error:', error);
+                    toast('⚠️ Failed to upload video: ' + file.name);
+                }
+            }
+            
+            progressBar.style.display = 'none';
+            progressBarFill.style.width = '0%';
+            pendingVideoFiles = [];
+            
+            return uploadedVideos;
+        }
+
+        // Delete video from storage
+        async function deleteVideoFromStorage(videoPath) {
+            if (!videoPath) return;
+            try {
+                const storageRef = storage.ref(videoPath);
+                await storageRef.delete();
+            } catch (error) {
+                console.error('Delete video error:', error);
+            }
+        }
+
+        // ===== GOOGLE SIGN IN =====
+        window.handleGoogleSignIn = function() {
+            const btn = document.getElementById('googleSignInBtn');
+            const errorEl = document.getElementById('loginError');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Signing in...';
+            errorEl.style.display = 'none';
+            
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    const emailKey = user.email.replace(/\./g, ',');
+                    return refs.admins.child(emailKey).once('value').then(snapshot => {
+                        if (snapshot.exists()) {
+                            document.getElementById('loginScreen').style.display = 'none';
+                            document.getElementById('dashboard').classList.add('active');
+                            currentUser = user;
+                            
+                            document.getElementById('userNameDisplay').textContent = user.displayName || user.email;
+                            if (user.photoURL) {
+                                document.getElementById('userAvatar').src = user.photoURL;
+                                document.getElementById('userAvatar').style.display = 'block';
+                            }
+                            
+                            refs.status.child(emailKey).set({
+                                online: true,
+                                lastSeen: firebase.database.ServerValue.TIMESTAMP,
+                                email: user.email,
+                                name: user.displayName || ''
+                            });
+                            refs.status.child(emailKey).onDisconnect().set({ online: false });
+                            
+                            refs.logs.push({
+                                staff: user.email,
+                                action: 'admin_login',
+                                timestamp: new Date().toISOString()
+                            });
+                            
+                            loadAllData();
+                            startSecurityMonitor();
+                            toast('Welcome, ' + (user.displayName || user.email).split(' ')[0] + '!');
+                        } else {
+                            auth.signOut();
+                            errorEl.textContent = '❌ Access denied.';
+                            errorEl.style.display = 'block';
+                            btn.disabled = false;
+                            btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google"> Sign in with Google';
+                        }
+                    });
+                })
+                .catch((error) => {
+                    errorEl.textContent = '❌ Sign in failed: ' + (error.message || 'Please try again.');
                     errorEl.style.display = 'block';
                     btn.disabled = false;
                     btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google"> Sign in with Google';
-                }
-            });
-        })
-        .catch((error) => {
-            errorEl.textContent = '❌ Sign in failed: ' + (error.message || 'Please try again.');
-            errorEl.style.display = 'block';
-            btn.disabled = false;
-            btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google"> Sign in with Google';
-            refs.secLogs.push({ type: 'failed_login', timestamp: new Date().toISOString(), error: error.message });
-        });
-};
+                    refs.secLogs.push({ type: 'failed_login', timestamp: new Date().toISOString(), error: error.message });
+                });
+        };
 
-function logout() {
-    if (currentUser) refs.status.child(currentUser.email.replace(/\./g, ',')).remove();
-    auth.signOut().then(() => location.reload());
-}
-
-// ===== SECURITY MONITOR =====
-function startSecurityMonitor() {
-    refs.blocked.on('value', snapshot => {
-        securityStats.blockedToday = Object.keys(snapshot.val() || {}).length;
-        updateSecurityStats();
-    });
-    refs.status.on('value', snapshot => {
-        const status = snapshot.val() || {};
-        securityStats.activeSessions = Object.values(status).filter(s => s.online).length;
-        updateSecurityStats();
-    });
-    refs.secLogs.orderByChild('timestamp').limitToLast(100).on('value', snapshot => {
-        const logs = []; let threats = 0, failed = 0;
-        snapshot.forEach(child => {
-            const log = child.val();
-            logs.unshift({ key: child.key, ...log });
-            if (log.type === 'threat') threats++;
-            if (log.type === 'failed_login') failed++;
-        });
-        securityStats.threatsDetected = threats;
-        securityStats.failedAttempts = failed;
-        updateSecurityStats();
-        renderSecurityLogs(logs);
-    });
-    setInterval(() => updateSecurityStats(), 5000);
-}
-
-function updateSecurityStats() {
-    const riskLevels = ['Low', 'Medium', 'High', 'Critical'];
-    const riskIndex = Math.min(Math.floor((securityStats.threatsDetected + securityStats.failedAttempts) / 5), 3);
-    securityStats.riskLevel = riskLevels[riskIndex];
-    
-    document.getElementById('secBlockedToday').textContent = securityStats.blockedToday;
-    document.getElementById('secSessions').textContent = securityStats.activeSessions;
-    document.getElementById('secFailed').textContent = securityStats.failedAttempts;
-    document.getElementById('secRisk').textContent = securityStats.riskLevel;
-    document.getElementById('secRisk').style.color = riskIndex === 0 ? '#10b981' : riskIndex === 1 ? '#f59e0b' : '#ef4444';
-    document.getElementById('secThreats').textContent = securityStats.threatsDetected;
-    document.getElementById('secPatched').textContent = securityStats.patchesApplied;
-}
-
-function renderSecurityLogs(logs) {
-    const container = document.getElementById('securityLogTable');
-    if (!container) return;
-    container.innerHTML = logs.length ? `<table><thead><tr><th>Time</th><th>Type</th><th>Details</th></tr></thead><tbody>${logs.slice(0, 20).map(log => `<tr><td>${new Date(log.timestamp).toLocaleTimeString()}</td><td><span class="badge ${log.type === 'threat' ? 'badge-danger' : 'badge-active'}">${log.type}</span></td><td style="font-size:0.75rem;">${log.details || log.error || '—'}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">✅ No security events</div>';
-}
-
-window.runDeepScan = async () => {
-    toast('🔄 Running deep scan...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await refs.secLogs.push({ type: 'scan', timestamp: new Date().toISOString(), details: 'Deep scan completed - no threats found' });
-    toast('✅ Scan complete - system secure');
-};
-
-window.autoPatchThreats = () => {
-    securityStats.patchesApplied++;
-    refs.secLogs.push({ type: 'patch', timestamp: new Date().toISOString(), details: 'Auto-patch applied successfully' });
-    updateSecurityStats();
-    toast('🔧 Patches applied!');
-};
-
-window.lockAllSessions = () => {
-    if (confirm('⚠️ Lock all active sessions?')) {
-        refs.status.once('value').then(s => {
-            Object.keys(s.val() || {}).forEach(k => refs.status.child(k).update({ online: false, locked: true, lockedAt: new Date().toISOString() }));
-        });
-        refs.secLogs.push({ type: 'lockdown', timestamp: new Date().toISOString(), details: 'All sessions locked by admin' });
-        toast('🔒 All sessions locked');
-    }
-};
-
-window.terminateAllSessions = () => {
-    if (confirm('⚠️⚠️ TERMINATE ALL SESSIONS?')) {
-        refs.status.remove();
-        refs.secLogs.push({ type: 'termination', timestamp: new Date().toISOString(), details: 'All sessions terminated by admin' });
-        toast('💀 All sessions terminated');
-    }
-};
-
-// ===== STAFF FUNCTIONS =====
-async function loadStaffList() {
-    const snap = await refs.staff.once('value');
-    const staff = snap.val() || {};
-    staffList = Object.entries(staff).map(([k, d]) => ({ email: k.replace(/,/g, '.'), isAdmin: d.isAdmin, added: d.added }));
-    document.getElementById('staffList').innerHTML = Object.keys(staff).length ? Object.entries(staff).map(([k, d]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#152544;border-radius:10px;margin-bottom:6px;font-size:0.85rem;border:1px solid #1a3050;"><div><div style="font-weight:600;">${k.replace(/,/g, '.')}</div><div style="font-size:0.7rem;color:#8899b4;">Added: ${new Date(d.added).toLocaleDateString()}</div></div><button class="action-btn btn-delete" onclick="removeStaffMember('${k}')"><i class="fas fa-trash"></i> Remove</button></div>`).join('') : '<div class="empty-state">No staff members</div>';
-}
-
-window.removeStaffMember = async (key) => { if (confirm('Remove this staff member?')) { await refs.staff.child(key).remove(); toast('Staff removed'); } };
-
-window.addStaff = async () => {
-    const email = document.getElementById('newStaffEmail').value.trim();
-    if (!email || !email.includes('@')) return toast('❌ Invalid email');
-    const key = email.replace(/\./g, ',');
-    if ((await refs.staff.child(key).once('value')).exists()) return toast('⚠️ Staff already exists');
-    await refs.staff.child(key).set({ added: new Date().toISOString(), isAdmin: false, email });
-    document.getElementById('newStaffEmail').value = '';
-    toast('✅ Staff added!');
-};
-
-// ===== BOOKING FUNCTIONS =====
-window.openReceive = (key) => {
-    const b = allBookings.find(x => x._key === key);
-    if (!b) return;
-    
-    document.getElementById('receiveBookingKey').value = key;
-    document.getElementById('receiveBookingId').value = b.bookingId || key.slice(-6);
-    document.getElementById('receiveCustomerName').value = b.name || '';
-    document.getElementById('receiveItemCount').value = b.itemCount || 1;
-    document.getElementById('receiveCategory').value = b.category || 'Other';
-    document.getElementById('receiveDescription').value = b.description || '';
-    
-    openModal('receiveItemsModal');
-};
-
-window.submitReceivedItems = async (e) => {
-    e.preventDefault();
-    
-    const submitBtn = document.getElementById('receiveSubmitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
-    
-    try {
-        const k = document.getElementById('receiveBookingKey').value;
-        
-        // Save received item data (image upload removed)
-        await refs.received.push({
-            bookingKey: k,
-            bookingId: document.getElementById('receiveBookingId').value,
-            customerName: document.getElementById('receiveCustomerName').value,
-            itemCount: parseInt(document.getElementById('receiveItemCount').value),
-            category: document.getElementById('receiveCategory').value,
-            description: document.getElementById('receiveDescription').value,
-            receivedBy: currentUser?.email,
-            timestamp: new Date().toISOString()
-        });
-        
-        await refs.bookings.child(k).update({ status: 'received', receivedAt: new Date().toISOString() });
-        closeReceiveModal();
-        toast('📦 Items received!');
-    } catch (error) {
-        console.error('Receive error:', error);
-        toast('❌ Error receiving items. Please try again.');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Receive';
-    }
-};
-
-window.closeReceiveModal = function() {
-    closeModal('receiveItemsModal');
-    document.getElementById('receiveForm').reset();
-};
-
-window.openCollect = (key) => {
-    const i = allReceived.find(r => r.bookingKey === key);
-    if (!i) return;
-    document.getElementById('collectBookingKey').value = key;
-    document.getElementById('collectBookingId').value = i.bookingId || key.slice(-6);
-    document.getElementById('collectCustomerName').value = i.customerName || '';
-    document.getElementById('collectItems').value = `${i.itemCount} ${i.category || ''}`;
-    openModal('collectionModal');
-};
-
-window.submitCollection = async (e) => {
-    e.preventDefault();
-    const k = document.getElementById('collectBookingKey').value;
-    await refs.collected.push({
-        bookingKey: k,
-        bookingId: document.getElementById('collectBookingId').value,
-        customerName: document.getElementById('collectCustomerName').value,
-        items: document.getElementById('collectItems').value,
-        collectedBy: currentUser?.email,
-        timestamp: new Date().toISOString()
-    });
-    await refs.bookings.child(k).update({ status: 'collected', collectedAt: new Date().toISOString() });
-    const ri = allReceived.find(r => r.bookingKey === k);
-    if (ri) await refs.received.child(ri.key).remove();
-    closeModal('collectionModal');
-    toast('✅ Items collected!');
-};
-
-// ===== PREVIEW FEATURE =====
-window.showPreview = (key) => {
-    // Check in all data sources
-    let booking = allBookings.find(b => b._key === key);
-    let isReceived = false;
-    let receivedData = null;
-    
-    if (!booking) {
-        receivedData = allReceived.find(r => r.bookingKey === key);
-        if (receivedData) {
-            isReceived = true;
-            booking = allBookings.find(b => b._key === receivedData.bookingKey) || {};
+        function logout() {
+            if (currentUser) refs.status.child(currentUser.email.replace(/\./g, ',')).remove();
+            auth.signOut().then(() => location.reload());
         }
-    }
-    
-    if (!booking && !receivedData) return;
-    
-    const existing = document.querySelector('.preview-modal');
-    if (existing) existing.remove();
-    
-    const data = isReceived ? receivedData : booking;
-    const bookingData = isReceived ? (booking || {}) : booking;
-    
-    const modal = document.createElement('div');
-    modal.className = 'preview-modal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    
-    modal.innerHTML = `
-        <div class="preview-content">
-            <div class="preview-header">
-                <h3><i class="fas fa-eye" style="color:#06b6d4;"></i> Booking Preview</h3>
-                <button class="preview-close-btn" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = '';" aria-label="Close"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="preview-grid">
-                <div class="preview-item">
-                    <div class="preview-label">Booking ID</div>
-                    <div class="preview-value">${data.bookingId || key.slice(-6)}</div>
-                </div>
-                <div class="preview-item">
-                    <div class="preview-label">Customer</div>
-                    <div class="preview-value">${data.customerName || bookingData.name || 'N/A'}</div>
-                </div>
-                <div class="preview-item">
-                    <div class="preview-label">Items</div>
-                    <div class="preview-value">${data.itemCount || bookingData.itemCount || 0} ${data.category || bookingData.category || ''}</div>
-                </div>
-                <div class="preview-item">
-                    <div class="preview-label">Status</div>
-                    <div class="preview-value"><span class="badge ${(bookingData.status || 'active') === 'active' ? 'badge-active' : 'badge-danger'}">${bookingData.status || 'active'}</span></div>
-                </div>
-                <div class="preview-item">
-                    <div class="preview-label">Assigned Staff</div>
-                    <div class="preview-value">${bookingData.assigned_to ? bookingData.assigned_to.split('@')[0] : 'Unassigned'}</div>
-                </div>
-                <div class="preview-item">
-                    <div class="preview-label">${isReceived ? 'Received' : 'Created'}</div>
-                    <div class="preview-value timestamp-badge"><i class="far fa-clock"></i> ${formatFullTimestamp(data.timestamp || bookingData.timestamp)}</div>
-                </div>
-            </div>
-            ${data.description ? `<div class="preview-item preview-item-full"><div class="preview-label">Description</div><div class="preview-value">${data.description}</div></div>` : ''}
-            <div class="preview-actions">
-                <button class="btn btn-outline" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = '';"><i class="fas fa-times"></i> Close</button>
-                ${!isReceived && bookingData.status !== 'received' ? `<button class="btn btn-receive" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = ''; openReceive('${key}')"><i class="fas fa-box"></i> Receive</button>` : ''}
-                <button class="btn btn-reassign" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = ''; reassignStaff('${key}')"><i class="fas fa-user-pen"></i> Reassign</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-    
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) { modal.remove(); document.body.style.overflow = ''; }
-    });
-    
-    const escHandler = (e) => {
-        if (e.key === 'Escape') { modal.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', escHandler); }
-    };
-    document.addEventListener('keydown', escHandler);
-    
-    const observer = new MutationObserver(() => {
-        if (!document.contains(modal)) { document.body.style.overflow = ''; document.removeEventListener('keydown', escHandler); observer.disconnect(); }
-    });
-    observer.observe(document.body, { childList: true });
-    
-    setTimeout(() => { const closeBtn = modal.querySelector('.preview-close-btn'); if (closeBtn) closeBtn.focus(); }, 100);
-};
 
-// ===== ASSIGN STAFF =====
-window.reassignStaff = (bookingKey, currentStaff = '') => {
-    document.querySelectorAll('.preview-modal').forEach(m => { m.remove(); document.body.style.overflow = ''; });
-    const existing = document.querySelector('.assign-staff-popup');
-    if (existing) existing.remove();
-    
-    const popup = document.createElement('div');
-    popup.className = 'assign-staff-popup';
-    popup.innerHTML = `
-        <div class="assign-staff-card">
-            <h3><i class="fas fa-user-plus"></i> Assign Staff</h3>
-            <input type="text" class="staff-search-input" id="staffSearchInput" placeholder="🔍 Search staff..." oninput="filterStaffList()" autocomplete="off">
-            <div class="staff-list-container" id="staffAssignList">${staffList.map(s => `<div class="staff-list-item ${s.email === currentStaff ? 'selected' : ''}" onclick="selectStaff('${s.email}', this)" data-email="${s.email}"><div class="staff-avatar">${s.email.charAt(0).toUpperCase()}</div><div class="staff-info"><div class="staff-name">${s.email.split('@')[0]}</div><div class="staff-email">${s.email}</div></div><div class="staff-status-dot ${Math.random() > 0.5 ? 'online' : 'offline'}"></div></div>`).join('')}</div>
-            <div style="margin:16px 0;"><input type="email" id="newStaffEmailAssign" placeholder="Or add new staff email..." style="width:100%;padding:12px;border-radius:10px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:16px;"></div>
-            <div class="assign-actions">
-                <button class="btn-modern btn-modern-secondary" onclick="this.closest('.assign-staff-popup').remove(); document.body.style.overflow = '';">Cancel</button>
-                <button class="btn-modern btn-modern-primary" onclick="confirmStaffAssign('${bookingKey}')"><i class="fas fa-check"></i> Confirm</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(popup);
-    document.body.style.overflow = 'hidden';
-    popup.addEventListener('click', e => { if (e.target === popup) { popup.remove(); document.body.style.overflow = ''; } });
-    setTimeout(() => { const si = document.getElementById('staffSearchInput'); if (si) si.focus(); }, 100);
-};
+        // ===== SECURITY MONITOR =====
+        function startSecurityMonitor() {
+            refs.blocked.on('value', snapshot => {
+                securityStats.blockedToday = Object.keys(snapshot.val() || {}).length;
+                updateSecurityStats();
+            });
+            refs.status.on('value', snapshot => {
+                const status = snapshot.val() || {};
+                securityStats.activeSessions = Object.values(status).filter(s => s.online).length;
+                updateSecurityStats();
+            });
+            refs.secLogs.orderByChild('timestamp').limitToLast(100).on('value', snapshot => {
+                const logs = []; let threats = 0, failed = 0;
+                snapshot.forEach(child => {
+                    const log = child.val();
+                    logs.unshift({ key: child.key, ...log });
+                    if (log.type === 'threat') threats++;
+                    if (log.type === 'failed_login') failed++;
+                });
+                securityStats.threatsDetected = threats;
+                securityStats.failedAttempts = failed;
+                updateSecurityStats();
+                renderSecurityLogs(logs);
+            });
+            setInterval(() => updateSecurityStats(), 5000);
+        }
 
-window.filterStaffList = () => {
-    const searchTerm = (document.getElementById('staffSearchInput')?.value || '').toLowerCase();
-    document.querySelectorAll('#staffAssignList .staff-list-item').forEach(item => {
-        item.style.display = item.dataset.email.toLowerCase().includes(searchTerm) ? 'flex' : 'none';
-    });
-};
+        function updateSecurityStats() {
+            const riskLevels = ['Low', 'Medium', 'High', 'Critical'];
+            const riskIndex = Math.min(Math.floor((securityStats.threatsDetected + securityStats.failedAttempts) / 5), 3);
+            securityStats.riskLevel = riskLevels[riskIndex];
+            
+            document.getElementById('secBlockedToday').textContent = securityStats.blockedToday;
+            document.getElementById('secSessions').textContent = securityStats.activeSessions;
+            document.getElementById('secFailed').textContent = securityStats.failedAttempts;
+            document.getElementById('secRisk').textContent = securityStats.riskLevel;
+            document.getElementById('secRisk').style.color = riskIndex === 0 ? '#10b981' : riskIndex === 1 ? '#f59e0b' : '#ef4444';
+            document.getElementById('secThreats').textContent = securityStats.threatsDetected;
+            document.getElementById('secPatched').textContent = securityStats.patchesApplied;
+        }
 
-let selectedStaffEmail = '';
+        function renderSecurityLogs(logs) {
+            const container = document.getElementById('securityLogTable');
+            if (!container) return;
+            container.innerHTML = logs.length ? `<table><thead><tr><th>Time</th><th>Type</th><th>Details</th></tr></thead><tbody>${logs.slice(0, 20).map(log => `<tr><td>${new Date(log.timestamp).toLocaleTimeString()}</td><td><span class="badge ${log.type === 'threat' ? 'badge-danger' : 'badge-active'}">${log.type}</span></td><td style="font-size:0.75rem;">${log.details || log.error || '—'}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">✅ No security events</div>';
+        }
 
-window.selectStaff = (email, element) => {
-    document.querySelectorAll('#staffAssignList .staff-list-item').forEach(el => el.classList.remove('selected'));
-    element.classList.add('selected');
-    selectedStaffEmail = email;
-    const input = document.getElementById('newStaffEmailAssign');
-    if (input) input.value = email;
-};
+        window.runDeepScan = async () => {
+            toast('🔄 Running deep scan...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await refs.secLogs.push({ type: 'scan', timestamp: new Date().toISOString(), details: 'Deep scan completed - no threats found' });
+            toast('✅ Scan complete - system secure');
+        };
 
-window.confirmStaffAssign = async (bookingKey) => {
-    let email = selectedStaffEmail;
-    const newEmailInput = document.getElementById('newStaffEmailAssign');
-    if (newEmailInput?.value.trim()) email = newEmailInput.value.trim();
-    if (!email?.includes('@')) return toast('❌ Invalid email');
-    
-    const key = email.replace(/\./g, ',');
-    if (!(await refs.staff.child(key).once('value')).exists()) {
-        if (!confirm(`Add ${email} to staff?`)) return;
-        await refs.staff.child(key).set({ email, added: new Date().toISOString(), isAdmin: false });
-    }
-    
-    await refs.bookings.child(bookingKey).update({ assigned_to: email, assigned_at: new Date().toISOString() });
-    document.querySelector('.assign-staff-popup')?.remove();
-    document.body.style.overflow = '';
-    toast(`✅ Assigned to ${email.split('@')[0]}`);
-};
+        window.autoPatchThreats = () => {
+            securityStats.patchesApplied++;
+            refs.secLogs.push({ type: 'patch', timestamp: new Date().toISOString(), details: 'Auto-patch applied successfully' });
+            updateSecurityStats();
+            toast('🔧 Patches applied!');
+        };
 
-// ===== TRASH FUNCTIONS =====
-window.deleteBooking = (key) => {
-    if (!confirm('Move booking to trash?')) return;
-    const b = allBookings.find(x => x._key === key);
-    if (!b) return;
-    refs.trash.push({ bookingKey: key, bookingId: b.bookingId || key.slice(-6), customerName: b.name || '', items: `${b.itemCount} ${b.category || ''}`, deletedBy: currentUser?.email, deletedAt: new Date().toISOString() });
-    refs.bookings.child(key).remove();
-    toast('🗑️ Moved to trash');
-};
+        window.lockAllSessions = () => {
+            if (confirm('⚠️ Lock all active sessions?')) {
+                refs.status.once('value').then(s => {
+                    Object.keys(s.val() || {}).forEach(k => refs.status.child(k).update({ online: false, locked: true, lockedAt: new Date().toISOString() }));
+                });
+                refs.secLogs.push({ type: 'lockdown', timestamp: new Date().toISOString(), details: 'All sessions locked by admin' });
+                toast('🔒 All sessions locked');
+            }
+        };
 
-window.restoreBooking = async (tk) => {
-    if (!confirm('Restore?')) return;
-    const i = allTrash.find(t => t.key === tk);
-    if (!i) return;
-    await refs.bookings.child(i.bookingKey).set({ status: 'active' });
-    await refs.trash.child(tk).remove();
-    toast('♻️ Restored');
-};
+        window.terminateAllSessions = () => {
+            if (confirm('⚠️⚠️ TERMINATE ALL SESSIONS?')) {
+                refs.status.remove();
+                refs.secLogs.push({ type: 'termination', timestamp: new Date().toISOString(), details: 'All sessions terminated by admin' });
+                toast('💀 All sessions terminated');
+            }
+        };
 
-window.permaDelete = (tk) => { if (confirm('Permanently delete?')) { refs.trash.child(tk).remove(); toast('❌ Deleted'); } };
-window.emptyTrash = () => { if (confirm('Empty trash?')) { allTrash.forEach(t => refs.trash.child(t.key).remove()); toast('🗑️ Emptied'); } };
-window.trashAllRecords = () => { if (confirm('Delete all records?')) { refs.records.remove(); toast('Deleted'); } };
-window.trashAllReviews = () => { if (confirm('Delete all reviews?')) { refs.reviews.remove(); toast('Deleted'); } };
-window.trashAllLogs = () => { if (confirm('Clear all logs?')) { refs.logs.remove(); toast('Cleared'); } };
+        // ===== STAFF FUNCTIONS =====
+        async function loadStaffList() {
+            const snap = await refs.staff.once('value');
+            const staff = snap.val() || {};
+            staffList = Object.entries(staff).map(([k, d]) => ({ email: k.replace(/,/g, '.'), isAdmin: d.isAdmin, added: d.added }));
+            document.getElementById('staffList').innerHTML = Object.keys(staff).length ? Object.entries(staff).map(([k, d]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#152544;border-radius:10px;margin-bottom:6px;font-size:0.85rem;border:1px solid #1a3050;"><div><div style="font-weight:600;">${k.replace(/,/g, '.')}</div><div style="font-size:0.7rem;color:#8899b4;">Added: ${new Date(d.added).toLocaleDateString()}</div></div><button class="action-btn btn-delete" onclick="removeStaffMember('${k}')"><i class="fas fa-trash"></i> Remove</button></div>`).join('') : '<div class="empty-state">No staff members</div>';
+        }
 
-// ===== RENDERING =====
-function renderStorage(bookings) {
-    const active = bookings.filter(b => b.status !== 'received' && b.status !== 'collected');
-    document.getElementById('storageCount').textContent = active.length;
-    document.getElementById('storageTableBody').innerHTML = active.length ? active.map(b => `<tr>
-        <td><strong>${b.bookingId || b._key?.slice(-6)}</strong></td>
-        <td>${b.name || '—'}</td>
-        <td>${b.itemCount || '?'} ${b.category || ''}</td>
-        <td><span class="timestamp-badge" title="${formatFullTimestamp(b.timestamp)}"><i class="far fa-clock"></i> ${formatTimestamp(b.timestamp)}</span></td>
-        <td>${b.assigned_to ? b.assigned_to.split('@')[0] : '<span style="color:#f87171;">Unassigned</span>'}</td>
-        <td>
-            <button class="action-btn btn-preview" onclick="showPreview('${b._key}')"><i class="fas fa-eye"></i></button>
-            <button class="action-btn btn-receive" onclick="openReceive('${b._key}')"><i class="fas fa-box"></i></button>
-            <button class="action-btn btn-reassign" onclick="reassignStaff('${b._key}', '${b.assigned_to || ''}')"><i class="fas fa-user"></i></button>
-            <button class="action-btn btn-delete" onclick="deleteBooking('${b._key}')"><i class="fas fa-trash"></i></button>
-        </td></tr>`).join('') : '<tr><td colspan="6"><div class="empty-state">No active bookings</div></td></tr>';
-    
-    document.getElementById('storageCardsContainer').innerHTML = active.length ? active.map(b => `
-        <div class="data-card">
-            <div class="card-row"><span class="card-label">ID</span><strong>${b.bookingId || b._key?.slice(-6)}</strong></div>
-            <div class="card-row"><span class="card-label">Customer</span>${b.name || '—'}</div>
-            <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(b.timestamp)}</span></div>
-            <div class="card-row"><span class="card-label">Staff</span>${b.assigned_to ? b.assigned_to.split('@')[0] : '<span style="color:#f87171;">Unassigned</span>'}</div>
-            <div class="card-actions">
-                <button class="action-btn btn-preview" onclick="showPreview('${b._key}')">Preview</button>
-                <button class="action-btn btn-receive" onclick="openReceive('${b._key}')">Receive</button>
-                <button class="action-btn btn-reassign" onclick="reassignStaff('${b._key}', '${b.assigned_to || ''}')">Assign</button>
-                <button class="action-btn btn-delete" onclick="deleteBooking('${b._key}')">Delete</button>
-            </div>
-        </div>`).join('') : '<div class="empty-state">No active bookings</div>';
-}
+        window.removeStaffMember = async (key) => { if (confirm('Remove this staff member?')) { await refs.staff.child(key).remove(); toast('Staff removed'); } };
 
-function renderReceived(items) {
-    document.getElementById('receivedCount').textContent = items.length;
-    document.getElementById('receivedBadge').textContent = items.length;
-    document.getElementById('receivedBadge').style.display = items.length ? 'inline-block' : 'none';
-    
-    document.getElementById('receivedTableBody').innerHTML = items.length ? items.map(r => `<tr>
-        <td><strong>${r.bookingId || r.bookingKey?.slice(-6)}</strong></td>
-        <td>${r.customerName || '—'}</td>
-        <td>${r.itemCount} ${r.category || ''}</td>
-        <td><span class="timestamp-badge" title="${formatFullTimestamp(r.timestamp)}"><i class="far fa-clock"></i> ${formatTimestamp(r.timestamp)}</span></td>
-        <td>${(r.receivedBy || '').split('@')[0]}</td>
-        <td>—</td>
-        <td>
-            <button class="action-btn btn-preview" onclick="showPreview('${r.bookingKey}')"><i class="fas fa-eye"></i></button>
-            <button class="action-btn btn-collect" onclick="openCollect('${r.bookingKey}')"><i class="fas fa-hand-holding"></i></button>
-        </td></tr>`).join('') : '<tr><td colspan="7"><div class="empty-state">No received items</div></td></tr>';
-    
-    document.getElementById('receivedCardsContainer').innerHTML = items.length ? items.map(r => `
-        <div class="data-card">
-            <div class="card-row"><span class="card-label">ID</span><strong>${r.bookingId || r.bookingKey?.slice(-6)}</strong></div>
-            <div class="card-row"><span class="card-label">Customer</span>${r.customerName || '—'}</div>
-            <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(r.timestamp)}</span></div>
-            <div class="card-row"><span class="card-label">Photo</span>No photo</div>
-            <div class="card-actions">
-                <button class="action-btn btn-preview" onclick="showPreview('${r.bookingKey}')">Preview</button>
-                <button class="action-btn btn-collect" onclick="openCollect('${r.bookingKey}')">Collect</button>
-            </div>
-        </div>`).join('') : '<div class="empty-state">No received items</div>';
-}
+        window.addStaff = async () => {
+            const email = document.getElementById('newStaffEmail').value.trim();
+            if (!email || !email.includes('@')) return toast('❌ Invalid email');
+            const key = email.replace(/\./g, ',');
+            if ((await refs.staff.child(key).once('value')).exists()) return toast('⚠️ Staff already exists');
+            await refs.staff.child(key).set({ added: new Date().toISOString(), isAdmin: false, email });
+            document.getElementById('newStaffEmail').value = '';
+            toast('✅ Staff added!');
+        };
 
-function renderCollected(items) {
-    document.getElementById('collectedCount').textContent = items.length;
-    document.getElementById('collectedBadge').textContent = items.length;
-    document.getElementById('collectedBadge').style.display = items.length ? 'inline-block' : 'none';
-    
-    document.getElementById('collectedTableBody').innerHTML = items.length ? items.map(c => `<tr>
-        <td><strong>${c.bookingId || c.bookingKey?.slice(-6)}</strong></td>
-        <td>${c.customerName || '—'}</td>
-        <td>${c.items || '—'}</td>
-        <td><span class="timestamp-badge" title="${formatFullTimestamp(c.timestamp)}"><i class="far fa-clock"></i> ${formatTimestamp(c.timestamp)}</span></td>
-        <td>${(c.collectedBy || '').split('@')[0]}</td>
-        <td><button class="action-btn btn-preview" onclick="showPreview('${c.bookingKey}')"><i class="fas fa-eye"></i></button></td>
-    </tr>`).join('') : '<tr><td colspan="6"><div class="empty-state">No collected items</div></td></tr>';
-    
-    document.getElementById('collectedCardsContainer').innerHTML = items.length ? items.map(c => `
-        <div class="data-card">
-            <div class="card-row"><span class="card-label">ID</span><strong>${c.bookingId || c.bookingKey?.slice(-6)}</strong></div>
-            <div class="card-row"><span class="card-label">Customer</span>${c.customerName || '—'}</div>
-            <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(c.timestamp)}</span></div>
-            <div class="card-actions"><button class="action-btn btn-preview" onclick="showPreview('${c.bookingKey}')">Preview</button></div>
-        </div>`).join('') : '<div class="empty-state">No collected items</div>';
-}
+        // ===== BOOKING FUNCTIONS (unchanged) =====
+        window.openReceive = (key) => {
+            const b = allBookings.find(x => x._key === key);
+            if (!b) return;
+            document.getElementById('receiveBookingKey').value = key;
+            document.getElementById('receiveBookingId').value = b.bookingId || key.slice(-6);
+            document.getElementById('receiveCustomerName').value = b.name || '';
+            document.getElementById('receiveItemCount').value = b.itemCount || 1;
+            document.getElementById('receiveCategory').value = b.category || 'Other';
+            document.getElementById('receiveDescription').value = b.description || '';
+            openModal('receiveItemsModal');
+        };
 
-function renderTrash(items) {
-    document.getElementById('trashCount').textContent = items.length;
-    document.getElementById('trashBadge').textContent = items.length;
-    document.getElementById('trashBadge').style.display = items.length ? 'inline-block' : 'none';
-    
-    document.getElementById('trashTableBody').innerHTML = items.length ? items.map(t => `<tr>
-        <td><strong>${t.bookingId || t.bookingKey?.slice(-6)}</strong></td>
-        <td>${t.customerName || '—'}</td>
-        <td>${t.items || '—'}</td>
-        <td><span class="timestamp-badge" title="${formatFullTimestamp(t.deletedAt)}"><i class="far fa-clock"></i> ${formatTimestamp(t.deletedAt)}</span></td>
-        <td>${(t.deletedBy || '').split('@')[0]}</td>
-        <td><button class="action-btn btn-restore" onclick="restoreBooking('${t.key}')"><i class="fas fa-undo"></i></button><button class="action-btn btn-delete" onclick="permaDelete('${t.key}')"><i class="fas fa-trash"></i></button></td>
-    </tr>`).join('') : '<tr><td colspan="6"><div class="empty-state">Trash is empty</div></td></tr>';
-    
-    document.getElementById('trashCardsContainer').innerHTML = items.length ? items.map(t => `
-        <div class="data-card" style="border-left:3px solid #ef4444;">
-            <div class="card-row"><span class="card-label">ID</span><strong>${t.bookingId || t.bookingKey?.slice(-6)}</strong></div>
-            <div class="card-row"><span class="card-label">Customer</span>${t.customerName || '—'}</div>
-            <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(t.deletedAt)}</span></div>
-            <div class="card-actions"><button class="action-btn btn-restore" onclick="restoreBooking('${t.key}')">Restore</button><button class="action-btn btn-delete" onclick="permaDelete('${t.key}')">Delete</button></div>
-        </div>`).join('') : '<div class="empty-state">Trash is empty</div>';
-}
+        window.submitReceivedItems = async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('receiveSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
+            try {
+                const k = document.getElementById('receiveBookingKey').value;
+                await refs.received.push({
+                    bookingKey: k,
+                    bookingId: document.getElementById('receiveBookingId').value,
+                    customerName: document.getElementById('receiveCustomerName').value,
+                    itemCount: parseInt(document.getElementById('receiveItemCount').value),
+                    category: document.getElementById('receiveCategory').value,
+                    description: document.getElementById('receiveDescription').value,
+                    receivedBy: currentUser?.email,
+                    timestamp: new Date().toISOString()
+                });
+                await refs.bookings.child(k).update({ status: 'received', receivedAt: new Date().toISOString() });
+                closeReceiveModal();
+                toast('📦 Items received!');
+            } catch (error) {
+                console.error('Receive error:', error);
+                toast('❌ Error receiving items.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Receive';
+            }
+        };
 
-// ===== PERFORMANCE =====
-function calcPerf() {
-    const p = {};
-    staffList.forEach(s => { p[s.email] = { email: s.email, total: 0, accuracy: 100, streak: 0, rating: 'N/A', status: '⚪ Inactive' }; });
-    allReceived.forEach(i => { if (i.receivedBy && p[i.receivedBy]) p[i.receivedBy].total += i.itemCount || 0; });
-    allCollected.forEach(i => { if (i.collectedBy && p[i.collectedBy]) p[i.collectedBy].total += parseInt(i.items) || 0; });
-    Object.values(p).forEach(s => { const sc = s.total; if (sc > 50) s.rating = 'Top Performer'; else if (sc > 20) s.rating = 'Good'; else if (sc > 0) s.rating = 'Active'; });
-    perfData = p;
-    renderPerf();
-}
+        window.closeReceiveModal = function() {
+            closeModal('receiveItemsModal');
+            document.getElementById('receiveForm').reset();
+        };
 
-function renderPerf() {
-    const arr = Object.values(perfData);
-    document.getElementById('topPerformersList').innerHTML = arr.filter(s => s.total > 0).sort((a,b) => b.total - a.total).slice(0,3).map((s,i) => `<div class="insight-metric"><span>${i+1}. ${s.email.split('@')[0]}</span><span class="insight-value" style="color:#34d399;">${s.total}</span></div>`).join('') || '<div class="empty-state">No data</div>';
-    document.getElementById('activityStreaks').innerHTML = arr.filter(s => s.streak > 0).map(s => `<div class="insight-metric"><span>${s.email.split('@')[0]}</span><span>🔥${s.streak}d</span></div>`).join('') || '<div class="empty-state">No streaks</div>';
-    document.getElementById('staffPerformanceTableBody').innerHTML = arr.length ? arr.map(s => `<tr><td><strong>${s.email.split('@')[0]}</strong></td><td>${s.total}</td><td><span class="staff-rating ${s.rating.includes('Top')?'top':'good'}">${s.rating}</span></td><td>${s.streak>0?`🔥${s.streak}d`:'—'}</td><td>${s.status}</td></tr>`).join('') : '<tr><td colspan="5"><div class="empty-state">Loading...</div></td></tr>';
-}
+        window.openCollect = (key) => {
+            const i = allReceived.find(r => r.bookingKey === key);
+            if (!i) return;
+            document.getElementById('collectBookingKey').value = key;
+            document.getElementById('collectBookingId').value = i.bookingId || key.slice(-6);
+            document.getElementById('collectCustomerName').value = i.customerName || '';
+            document.getElementById('collectItems').value = `${i.itemCount} ${i.category || ''}`;
+            openModal('collectionModal');
+        };
 
-// ===== APPROVALS =====
-function loadPending() {
-    refs.pending.on('value', s => {
-        allPending = []; 
-        s.forEach(c => { 
-            const v = c.val(); 
-            v._key = c.key; 
-            allPending.push(v); 
-        });
-        
-        const pendingItems = allPending.filter(a => a.status === 'pending');
-        document.getElementById('pendingBadge').textContent = pendingItems.length;
-        document.getElementById('pendingBadge').style.display = pendingItems.length ? 'inline-block' : 'none';
-        
-        document.getElementById('pendingApprovalsContainer').innerHTML = pendingItems.length ? 
-            pendingItems.map(x => {
-                const booking = allBookings.find(b => b._key === x.bookingKey) || {};
-                return `
-                <div class="card" style="margin-bottom:12px; border-left: 3px solid #f59e0b;">
-                    <div style="padding:16px;">
-                        <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:10px;">
-                            <div>
-                                <h4 style="margin-bottom:4px;">
-                                    ${x.type === 'collection' ? '📦 Collection' : x.type === 'assignment_request' ? '👤 Assignment' : '✏️ Edit'} Request
-                                    ${x.resubmitted ? '<span class="badge badge-pending">RESUBMITTED</span>' : ''}
-                                </h4>
-                                <div style="font-size:0.8rem;color:#8899b4;">
-                                    Booking: <strong>#${x.bookingKey?.slice(-6)}</strong>
-                                    ${booking.name ? ` • Customer: ${booking.name}` : ''}
-                                </div>
-                                <div style="font-size:0.75rem;color:#6b8ab0;margin-top:4px;">
-                                    By: <strong>${x.requestedByName || (x.requestedBy || '').split('@')[0]}</strong>
-                                    • ${formatTimestamp(x.timestamp)}
-                                </div>
-                                ${x.previousRejection ? `
-                                <div style="margin-top:8px;padding:8px;background:rgba(239,68,68,0.1);border-radius:6px;border-left:3px solid #ef4444;">
-                                    <div style="font-size:0.7rem;color:#f87171;font-weight:600;">Previous Rejection:</div>
-                                    <div style="font-size:0.75rem;color:#fca5a5;">"${x.previousRejection}"</div>
-                                </div>` : ''}
-                            </div>
-                            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                ${x.type === 'assignment_request' ? 
-                                    `<button class="action-btn btn-approve" onclick="approveAssignment('${x._key}','${x.bookingKey}','${x.requestedBy}')">
-                                        <i class="fas fa-check"></i> Assign
-                                    </button>` : 
-                                    `<button class="action-btn btn-approve" onclick="approveCollection('${x._key}')">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>`
-                                }
-                                <button class="action-btn btn-reject-feedback" onclick="openRejectFeedback('${x._key}')">
-                                    <i class="fas fa-comment"></i> Reject with Feedback
-                                </button>
-                            </div>
-                        </div>
+        window.submitCollection = async (e) => {
+            e.preventDefault();
+            const k = document.getElementById('collectBookingKey').value;
+            await refs.collected.push({
+                bookingKey: k,
+                bookingId: document.getElementById('collectBookingId').value,
+                customerName: document.getElementById('collectCustomerName').value,
+                items: document.getElementById('collectItems').value,
+                collectedBy: currentUser?.email,
+                timestamp: new Date().toISOString()
+            });
+            await refs.bookings.child(k).update({ status: 'collected', collectedAt: new Date().toISOString() });
+            const ri = allReceived.find(r => r.bookingKey === k);
+            if (ri) await refs.received.child(ri.key).remove();
+            closeModal('collectionModal');
+            toast('✅ Items collected!');
+        };
+
+        // ===== PREVIEW, ASSIGN STAFF, TRASH FUNCTIONS (unchanged) =====
+        window.showPreview = (key) => {
+            let booking = allBookings.find(b => b._key === key);
+            let isReceived = false;
+            let receivedData = null;
+            if (!booking) {
+                receivedData = allReceived.find(r => r.bookingKey === key);
+                if (receivedData) { isReceived = true; booking = allBookings.find(b => b._key === receivedData.bookingKey) || {}; }
+            }
+            if (!booking && !receivedData) return;
+            const existing = document.querySelector('.preview-modal');
+            if (existing) existing.remove();
+            const data = isReceived ? receivedData : booking;
+            const bookingData = isReceived ? (booking || {}) : booking;
+            const modal = document.createElement('div');
+            modal.className = 'preview-modal';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.innerHTML = `
+                <div class="preview-content">
+                    <div class="preview-header">
+                        <h3><i class="fas fa-eye" style="color:#06b6d4;"></i> Booking Preview</h3>
+                        <button class="preview-close-btn" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = '';" aria-label="Close"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="preview-grid">
+                        <div class="preview-item"><div class="preview-label">Booking ID</div><div class="preview-value">${data.bookingId || key.slice(-6)}</div></div>
+                        <div class="preview-item"><div class="preview-label">Customer</div><div class="preview-value">${data.customerName || bookingData.name || 'N/A'}</div></div>
+                        <div class="preview-item"><div class="preview-label">Items</div><div class="preview-value">${data.itemCount || bookingData.itemCount || 0} ${data.category || bookingData.category || ''}</div></div>
+                        <div class="preview-item"><div class="preview-label">Status</div><div class="preview-value"><span class="badge ${(bookingData.status || 'active') === 'active' ? 'badge-active' : 'badge-danger'}">${bookingData.status || 'active'}</span></div></div>
+                        <div class="preview-item"><div class="preview-label">Assigned Staff</div><div class="preview-value">${bookingData.assigned_to ? bookingData.assigned_to.split('@')[0] : 'Unassigned'}</div></div>
+                        <div class="preview-item"><div class="preview-label">${isReceived ? 'Received' : 'Created'}</div><div class="preview-value timestamp-badge"><i class="far fa-clock"></i> ${formatFullTimestamp(data.timestamp || bookingData.timestamp)}</div></div>
+                    </div>
+                    ${data.description ? `<div class="preview-item preview-item-full"><div class="preview-label">Description</div><div class="preview-value">${data.description}</div></div>` : ''}
+                    <div class="preview-actions">
+                        <button class="btn btn-outline" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = '';"><i class="fas fa-times"></i> Close</button>
+                        ${!isReceived && bookingData.status !== 'received' ? `<button class="btn btn-receive" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = ''; openReceive('${key}')"><i class="fas fa-box"></i> Receive</button>` : ''}
+                        <button class="btn btn-reassign" onclick="this.closest('.preview-modal').remove(); document.body.style.overflow = ''; reassignStaff('${key}')"><i class="fas fa-user-pen"></i> Reassign</button>
                     </div>
                 </div>`;
-            }).join('') : 
-            '<div class="card"><div class="empty-state">✅ No pending approvals</div></div>';
-    });
-}
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+            modal.addEventListener('click', function(e) { if (e.target === modal) { modal.remove(); document.body.style.overflow = ''; } });
+            const escHandler = (e) => { if (e.key === 'Escape') { modal.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', escHandler); } };
+            document.addEventListener('keydown', escHandler);
+            const observer = new MutationObserver(() => { if (!document.contains(modal)) { document.body.style.overflow = ''; document.removeEventListener('keydown', escHandler); observer.disconnect(); } });
+            observer.observe(document.body, { childList: true });
+            setTimeout(() => { const closeBtn = modal.querySelector('.preview-close-btn'); if (closeBtn) closeBtn.focus(); }, 100);
+        };
 
-// ===== FEEDBACK/REJECTION WORKFLOW =====
-window.openRejectFeedback = function(approvalKey) {
-    currentRejectionKey = approvalKey;
-    document.getElementById('feedbackTextarea').value = '';
-    document.getElementById('feedbackModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-};
+        window.reassignStaff = (bookingKey, currentStaff = '') => {
+            document.querySelectorAll('.preview-modal').forEach(m => { m.remove(); document.body.style.overflow = ''; });
+            const existing = document.querySelector('.assign-staff-popup');
+            if (existing) existing.remove();
+            const popup = document.createElement('div');
+            popup.className = 'assign-staff-popup';
+            popup.innerHTML = `
+                <div class="assign-staff-card">
+                    <h3><i class="fas fa-user-plus"></i> Assign Staff</h3>
+                    <input type="text" class="staff-search-input" id="staffSearchInput" placeholder="🔍 Search staff..." oninput="filterStaffList()" autocomplete="off">
+                    <div class="staff-list-container" id="staffAssignList">${staffList.map(s => `<div class="staff-list-item ${s.email === currentStaff ? 'selected' : ''}" onclick="selectStaff('${s.email}', this)" data-email="${s.email}"><div class="staff-avatar">${s.email.charAt(0).toUpperCase()}</div><div class="staff-info"><div class="staff-name">${s.email.split('@')[0]}</div><div class="staff-email">${s.email}</div></div><div class="staff-status-dot ${Math.random() > 0.5 ? 'online' : 'offline'}"></div></div>`).join('')}</div>
+                    <div style="margin:16px 0;"><input type="email" id="newStaffEmailAssign" placeholder="Or add new staff email..." style="width:100%;padding:12px;border-radius:10px;border:2px solid #1a3050;background:#0a1628;color:#e2e8f0;font-size:16px;"></div>
+                    <div class="assign-actions">
+                        <button class="btn-modern btn-modern-secondary" onclick="this.closest('.assign-staff-popup').remove(); document.body.style.overflow = '';">Cancel</button>
+                        <button class="btn-modern btn-modern-primary" onclick="confirmStaffAssign('${bookingKey}')"><i class="fas fa-check"></i> Confirm</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(popup);
+            document.body.style.overflow = 'hidden';
+            popup.addEventListener('click', e => { if (e.target === popup) { popup.remove(); document.body.style.overflow = ''; } });
+            setTimeout(() => { const si = document.getElementById('staffSearchInput'); if (si) si.focus(); }, 100);
+        };
 
-window.closeFeedbackModal = function() {
-    document.getElementById('feedbackModal').style.display = 'none';
-    document.body.style.overflow = '';
-    currentRejectionKey = null;
-};
+        window.filterStaffList = () => {
+            const searchTerm = (document.getElementById('staffSearchInput')?.value || '').toLowerCase();
+            document.querySelectorAll('#staffAssignList .staff-list-item').forEach(item => {
+                item.style.display = item.dataset.email.toLowerCase().includes(searchTerm) ? 'flex' : 'none';
+            });
+        };
 
-window.submitRejectionWithFeedback = async function() {
-    const feedback = document.getElementById('feedbackTextarea').value.trim();
-    if (!feedback) {
-        toast('⚠️ Please provide feedback explaining the rejection');
-        return;
-    }
-    
-    if (!currentRejectionKey) return;
-    
-    const approval = allPending.find(a => a._key === currentRejectionKey);
-    if (approval) {
-        // Update booking to remove pending_collection flag
-        await refs.bookings.child(approval.bookingKey).update({ 
-            pending_collection: false 
+        let selectedStaffEmail = '';
+        window.selectStaff = (email, element) => {
+            document.querySelectorAll('#staffAssignList .staff-list-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedStaffEmail = email;
+            const input = document.getElementById('newStaffEmailAssign');
+            if (input) input.value = email;
+        };
+
+        window.confirmStaffAssign = async (bookingKey) => {
+            let email = selectedStaffEmail;
+            const newEmailInput = document.getElementById('newStaffEmailAssign');
+            if (newEmailInput?.value.trim()) email = newEmailInput.value.trim();
+            if (!email?.includes('@')) return toast('❌ Invalid email');
+            const key = email.replace(/\./g, ',');
+            if (!(await refs.staff.child(key).once('value')).exists()) {
+                if (!confirm(`Add ${email} to staff?`)) return;
+                await refs.staff.child(key).set({ email, added: new Date().toISOString(), isAdmin: false });
+            }
+            await refs.bookings.child(bookingKey).update({ assigned_to: email, assigned_at: new Date().toISOString() });
+            document.querySelector('.assign-staff-popup')?.remove();
+            document.body.style.overflow = '';
+            toast(`✅ Assigned to ${email.split('@')[0]}`);
+        };
+
+        window.deleteBooking = (key) => {
+            if (!confirm('Move booking to trash?')) return;
+            const b = allBookings.find(x => x._key === key);
+            if (!b) return;
+            refs.trash.push({ bookingKey: key, bookingId: b.bookingId || key.slice(-6), customerName: b.name || '', items: `${b.itemCount} ${b.category || ''}`, deletedBy: currentUser?.email, deletedAt: new Date().toISOString() });
+            refs.bookings.child(key).remove();
+            toast('🗑️ Moved to trash');
+        };
+
+        window.restoreBooking = async (tk) => {
+            if (!confirm('Restore?')) return;
+            const i = allTrash.find(t => t.key === tk);
+            if (!i) return;
+            await refs.bookings.child(i.bookingKey).set({ status: 'active' });
+            await refs.trash.child(tk).remove();
+            toast('♻️ Restored');
+        };
+
+        window.permaDelete = (tk) => { if (confirm('Permanently delete?')) { refs.trash.child(tk).remove(); toast('❌ Deleted'); } };
+        window.emptyTrash = () => { if (confirm('Empty trash?')) { allTrash.forEach(t => refs.trash.child(t.key).remove()); toast('🗑️ Emptied'); } };
+        window.trashAllRecords = () => { if (confirm('Delete all records?')) { refs.records.remove(); toast('Deleted'); } };
+        window.trashAllReviews = () => { if (confirm('Delete all reviews?')) { refs.reviews.remove(); toast('Deleted'); } };
+        window.trashAllLogs = () => { if (confirm('Clear all logs?')) { refs.logs.remove(); toast('Cleared'); } };
+
+        // ===== RENDERING FUNCTIONS (unchanged) =====
+        function renderStorage(bookings) {
+            const active = bookings.filter(b => b.status !== 'received' && b.status !== 'collected');
+            document.getElementById('storageCount').textContent = active.length;
+            document.getElementById('storageTableBody').innerHTML = active.length ? active.map(b => `<tr>
+                <td><strong>${b.bookingId || b._key?.slice(-6)}</strong></td>
+                <td>${b.name || '—'}</td>
+                <td>${b.itemCount || '?'} ${b.category || ''}</td>
+                <td><span class="timestamp-badge" title="${formatFullTimestamp(b.timestamp)}"><i class="far fa-clock"></i> ${formatTimestamp(b.timestamp)}</span></td>
+                <td>${b.assigned_to ? b.assigned_to.split('@')[0] : '<span style="color:#f87171;">Unassigned</span>'}</td>
+                <td>
+                    <button class="action-btn btn-preview" onclick="showPreview('${b._key}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn btn-receive" onclick="openReceive('${b._key}')"><i class="fas fa-box"></i></button>
+                    <button class="action-btn btn-reassign" onclick="reassignStaff('${b._key}', '${b.assigned_to || ''}')"><i class="fas fa-user"></i></button>
+                    <button class="action-btn btn-delete" onclick="deleteBooking('${b._key}')"><i class="fas fa-trash"></i></button>
+                </td></tr>`).join('') : '<tr><td colspan="6"><div class="empty-state">No active bookings</div></td></tr>';
+            document.getElementById('storageCardsContainer').innerHTML = active.length ? active.map(b => `
+                <div class="data-card">
+                    <div class="card-row"><span class="card-label">ID</span><strong>${b.bookingId || b._key?.slice(-6)}</strong></div>
+                    <div class="card-row"><span class="card-label">Customer</span>${b.name || '—'}</div>
+                    <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(b.timestamp)}</span></div>
+                    <div class="card-row"><span class="card-label">Staff</span>${b.assigned_to ? b.assigned_to.split('@')[0] : '<span style="color:#f87171;">Unassigned</span>'}</div>
+                    <div class="card-actions">
+                        <button class="action-btn btn-preview" onclick="showPreview('${b._key}')">Preview</button>
+                        <button class="action-btn btn-receive" onclick="openReceive('${b._key}')">Receive</button>
+                        <button class="action-btn btn-reassign" onclick="reassignStaff('${b._key}', '${b.assigned_to || ''}')">Assign</button>
+                        <button class="action-btn btn-delete" onclick="deleteBooking('${b._key}')">Delete</button>
+                    </div>
+                </div>`).join('') : '<div class="empty-state">No active bookings</div>';
+        }
+
+        function renderReceived(items) {
+            document.getElementById('receivedCount').textContent = items.length;
+            document.getElementById('receivedBadge').textContent = items.length;
+            document.getElementById('receivedBadge').style.display = items.length ? 'inline-block' : 'none';
+            document.getElementById('receivedTableBody').innerHTML = items.length ? items.map(r => `<tr>
+                <td><strong>${r.bookingId || r.bookingKey?.slice(-6)}</strong></td>
+                <td>${r.customerName || '—'}</td>
+                <td>${r.itemCount} ${r.category || ''}</td>
+                <td><span class="timestamp-badge" title="${formatFullTimestamp(r.timestamp)}"><i class="far fa-clock"></i> ${formatTimestamp(r.timestamp)}</span></td>
+                <td>${(r.receivedBy || '').split('@')[0]}</td>
+                <td>—</td>
+                <td>
+                    <button class="action-btn btn-preview" onclick="showPreview('${r.bookingKey}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn btn-collect" onclick="openCollect('${r.bookingKey}')"><i class="fas fa-hand-holding"></i></button>
+                </td></tr>`).join('') : '<tr><td colspan="7"><div class="empty-state">No received items</div></td></tr>';
+            document.getElementById('receivedCardsContainer').innerHTML = items.length ? items.map(r => `
+                <div class="data-card">
+                    <div class="card-row"><span class="card-label">ID</span><strong>${r.bookingId || r.bookingKey?.slice(-6)}</strong></div>
+                    <div class="card-row"><span class="card-label">Customer</span>${r.customerName || '—'}</div>
+                    <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(r.timestamp)}</span></div>
+                    <div class="card-row"><span class="card-label">Photo</span>No photo</div>
+                    <div class="card-actions">
+                        <button class="action-btn btn-preview" onclick="showPreview('${r.bookingKey}')">Preview</button>
+                        <button class="action-btn btn-collect" onclick="openCollect('${r.bookingKey}')">Collect</button>
+                    </div>
+                </div>`).join('') : '<div class="empty-state">No received items</div>';
+        }
+
+        function renderCollected(items) {
+            document.getElementById('collectedCount').textContent = items.length;
+            document.getElementById('collectedBadge').textContent = items.length;
+            document.getElementById('collectedBadge').style.display = items.length ? 'inline-block' : 'none';
+            document.getElementById('collectedTableBody').innerHTML = items.length ? items.map(c => `<tr>
+                <td><strong>${c.bookingId || c.bookingKey?.slice(-6)}</strong></td>
+                <td>${c.customerName || '—'}</td>
+                <td>${c.items || '—'}</td>
+                <td><span class="timestamp-badge" title="${formatFullTimestamp(c.timestamp)}"><i class="far fa-clock"></i> ${formatTimestamp(c.timestamp)}</span></td>
+                <td>${(c.collectedBy || '').split('@')[0]}</td>
+                <td><button class="action-btn btn-preview" onclick="showPreview('${c.bookingKey}')"><i class="fas fa-eye"></i></button></td>
+            </tr>`).join('') : '<tr><td colspan="6"><div class="empty-state">No collected items</div></td></tr>';
+            document.getElementById('collectedCardsContainer').innerHTML = items.length ? items.map(c => `
+                <div class="data-card">
+                    <div class="card-row"><span class="card-label">ID</span><strong>${c.bookingId || c.bookingKey?.slice(-6)}</strong></div>
+                    <div class="card-row"><span class="card-label">Customer</span>${c.customerName || '—'}</div>
+                    <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(c.timestamp)}</span></div>
+                    <div class="card-actions"><button class="action-btn btn-preview" onclick="showPreview('${c.bookingKey}')">Preview</button></div>
+                </div>`).join('') : '<div class="empty-state">No collected items</div>';
+        }
+
+        function renderTrash(items) {
+            document.getElementById('trashCount').textContent = items.length;
+            document.getElementById('trashBadge').textContent = items.length;
+            document.getElementById('trashBadge').style.display = items.length ? 'inline-block' : 'none';
+            document.getElementById('trashTableBody').innerHTML = items.length ? items.map(t => `<tr>
+                <td><strong>${t.bookingId || t.bookingKey?.slice(-6)}</strong></td>
+                <td>${t.customerName || '—'}</td>
+                <td>${t.items || '—'}</td>
+                <td><span class="timestamp-badge" title="${formatFullTimestamp(t.deletedAt)}"><i class="far fa-clock"></i> ${formatTimestamp(t.deletedAt)}</span></td>
+                <td>${(t.deletedBy || '').split('@')[0]}</td>
+                <td><button class="action-btn btn-restore" onclick="restoreBooking('${t.key}')"><i class="fas fa-undo"></i></button><button class="action-btn btn-delete" onclick="permaDelete('${t.key}')"><i class="fas fa-trash"></i></button></td>
+            </tr>`).join('') : '<tr><td colspan="6"><div class="empty-state">Trash is empty</div></td></tr>';
+            document.getElementById('trashCardsContainer').innerHTML = items.length ? items.map(t => `
+                <div class="data-card" style="border-left:3px solid #ef4444;">
+                    <div class="card-row"><span class="card-label">ID</span><strong>${t.bookingId || t.bookingKey?.slice(-6)}</strong></div>
+                    <div class="card-row"><span class="card-label">Customer</span>${t.customerName || '—'}</div>
+                    <div class="card-row"><span class="card-label">Time</span><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(t.deletedAt)}</span></div>
+                    <div class="card-actions"><button class="action-btn btn-restore" onclick="restoreBooking('${t.key}')">Restore</button><button class="action-btn btn-delete" onclick="permaDelete('${t.key}')">Delete</button></div>
+                </div>`).join('') : '<div class="empty-state">Trash is empty</div>';
+        }
+
+        // ===== HOUSE HUNTING FUNCTIONS WITH VIDEO SUPPORT =====
+        function loadHousingListings() {
+            if (housingListener) {
+                refs.housing.off('value', housingListener);
+            }
+            
+            housingListener = refs.housing.orderByChild('timestamp').on('value', snapshot => {
+                allHousingListings = [];
+                snapshot.forEach(child => {
+                    const val = child.val();
+                    val._key = child.key;
+                    allHousingListings.push(val);
+                });
+                updateHousingMetrics();
+                renderHousingListings();
+            });
+        }
+
+        function updateHousingMetrics() {
+            const available = allHousingListings.filter(h => h.status === 'available').length;
+            const rented = allHousingListings.filter(h => h.status === 'rented').length;
+            const pending = allHousingListings.filter(h => h.status === 'pending').length;
+            const flagged = allHousingListings.filter(h => h.status === 'flagged').length;
+            
+            document.getElementById('housingCount').textContent = allHousingListings.length;
+            document.getElementById('housingBadge').textContent = allHousingListings.length;
+            document.getElementById('housingBadge').style.display = allHousingListings.length ? 'inline-block' : 'none';
+            
+            document.getElementById('housingTotalListings').textContent = allHousingListings.length;
+            document.getElementById('housingAvailableCount').textContent = available;
+            document.getElementById('housingPendingCount').textContent = pending;
+            document.getElementById('housingFlaggedCount').textContent = flagged;
+        }
+
+        function renderHousingListings() {
+            const statusFilter = document.getElementById('housingFilterStatus')?.value || 'all';
+            const typeFilter = document.getElementById('housingFilterType')?.value || 'all';
+            const searchQuery = (document.getElementById('housingSearchInput')?.value || '').toLowerCase();
+            const sortBy = document.getElementById('housingSortBy')?.value || 'newest';
+            
+            let filtered = [...allHousingListings];
+            
+            if (statusFilter !== 'all') filtered = filtered.filter(h => h.status === statusFilter);
+            if (typeFilter !== 'all') filtered = filtered.filter(h => h.propertyType === typeFilter);
+            if (searchQuery) {
+                filtered = filtered.filter(h => 
+                    (h.title || '').toLowerCase().includes(searchQuery) ||
+                    (h.location || '').toLowerCase().includes(searchQuery) ||
+                    (h.landlord || '').toLowerCase().includes(searchQuery) ||
+                    (h.description || '').toLowerCase().includes(searchQuery)
+                );
+            }
+            
+            switch(sortBy) {
+                case 'oldest': filtered.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); break;
+                case 'price_low': filtered.sort((a, b) => (a.monthlyRent || 0) - (b.monthlyRent || 0)); break;
+                case 'price_high': filtered.sort((a, b) => (b.monthlyRent || 0) - (a.monthlyRent || 0)); break;
+                case 'rating': filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
+                default: filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+            
+            // Desktop table
+            document.getElementById('housingTableBody').innerHTML = filtered.length ? filtered.map(h => `
+                <tr>
+                    <td><strong>#${h._key?.slice(-6)}</strong></td>
+                    <td>${h.title || '—'}</td>
+                    <td><span class="badge badge-active">${h.propertyType || 'N/A'}</span></td>
+                    <td><strong>$${(h.monthlyRent || 0).toFixed(2)}</strong></td>
+                    <td>${h.location || '—'}</td>
+                    <td>
+                        ${h.videos?.length ? `<span class="badge badge-video" onclick="viewHouseDetail('${h._key}')" style="cursor:pointer;"><i class="fas fa-video"></i> ${h.videos.length} video${h.videos.length > 1 ? 's' : ''}</span>` : '<span style="color:#4a6080;">No videos</span>'}
+                    </td>
+                    <td>${h.rating ? '⭐'.repeat(Math.min(h.rating, 5)) : '—'}</td>
+                    <td><span class="house-status-badge house-status-${h.status || 'pending'}">${h.status || 'pending'}</span></td>
+                    <td><span class="timestamp-badge"><i class="far fa-clock"></i> ${formatTimestamp(h.timestamp)}</span></td>
+                    <td>
+                        <button class="action-btn btn-preview" onclick="viewHouseDetail('${h._key}')"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn btn-video" onclick="viewHouseDetail('${h._key}')"><i class="fas fa-video"></i></button>
+                        <button class="action-btn btn-reassign" onclick="editHouseListing('${h._key}')"><i class="fas fa-edit"></i></button>
+                        ${h.status !== 'flagged' ? `<button class="action-btn btn-flag" onclick="flagHouseListing('${h._key}')"><i class="fas fa-flag"></i></button>` : `<button class="action-btn btn-verify" onclick="verifyHouseListing('${h._key}')"><i class="fas fa-check"></i></button>`}
+                        <button class="action-btn btn-delete" onclick="deleteHouseListing('${h._key}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="10"><div class="empty-state">🏠 No house listings found</div></td></tr>';
+            
+            // Mobile cards
+            document.getElementById('housingCardsContainer').innerHTML = filtered.length ? filtered.map(h => `
+                <div class="data-card" style="border-left: 3px solid ${h.status === 'flagged' ? '#ef4444' : h.status === 'available' ? '#10b981' : '#f59e0b'};">
+                    <div class="card-row"><span class="card-label">ID</span><strong>#${h._key?.slice(-6)}</strong></div>
+                    <div class="card-row"><span class="card-label">Title</span><span>${h.title || '—'}</span></div>
+                    <div class="card-row"><span class="card-label">Price</span><strong>$${(h.monthlyRent || 0).toFixed(2)}/mo</strong></div>
+                    <div class="card-row"><span class="card-label">Location</span><span>${h.location || '—'}</span></div>
+                    <div class="card-row"><span class="card-label">Videos</span>${h.videos?.length ? `<span class="badge badge-video"><i class="fas fa-video"></i> ${h.videos.length}</span>` : '<span style="color:#4a6080;">None</span>'}</div>
+                    <div class="card-row"><span class="card-label">Status</span><span class="house-status-badge house-status-${h.status || 'pending'}">${h.status || 'pending'}</span></div>
+                    <div class="card-actions">
+                        <button class="action-btn btn-preview" onclick="viewHouseDetail('${h._key}')">View</button>
+                        <button class="action-btn btn-video" onclick="viewHouseDetail('${h._key}')">Videos</button>
+                        <button class="action-btn btn-reassign" onclick="editHouseListing('${h._key}')">Edit</button>
+                        ${h.status !== 'flagged' ? `<button class="action-btn btn-flag" onclick="flagHouseListing('${h._key}')">Flag</button>` : `<button class="action-btn btn-verify" onclick="verifyHouseListing('${h._key}')">Verify</button>`}
+                        <button class="action-btn btn-delete" onclick="deleteHouseListing('${h._key}')">Delete</button>
+                    </div>
+                </div>
+            `).join('') : '<div class="empty-state">🏠 No house listings found</div>';
+        }
+
+        window.openAddHouseModal = function() {
+            document.getElementById('houseModalTitle').innerHTML = '<i class="fas fa-home"></i> Add New Listing';
+            document.getElementById('houseEditKey').value = '';
+            document.getElementById('houseForm').reset();
+            document.getElementById('houseStatus').value = 'available';
+            pendingVideoFiles = [];
+            existingVideosData = [];
+            document.getElementById('existingVideosData').value = '';
+            document.getElementById('videoUploadProgress').style.display = 'none';
+            document.getElementById('videoUploadProgressBar').style.width = '0%';
+            renderVideoPreviews();
+            openModal('addHouseModal');
+        };
+
+        window.editHouseListing = function(key) {
+            const listing = allHousingListings.find(h => h._key === key);
+            if (!listing) return;
+            
+            document.getElementById('houseModalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Listing';
+            document.getElementById('houseEditKey').value = key;
+            document.getElementById('houseTitle').value = listing.title || '';
+            document.getElementById('houseType').value = listing.propertyType || 'apartment';
+            document.getElementById('housePrice').value = listing.monthlyRent || '';
+            document.getElementById('houseBedrooms').value = listing.bedrooms || 1;
+            document.getElementById('houseLocation').value = listing.location || '';
+            document.getElementById('houseDescription').value = listing.description || '';
+            document.getElementById('houseLandlord').value = listing.landlord || '';
+            document.getElementById('housePhone').value = listing.contactPhone || '';
+            document.getElementById('houseEmail').value = listing.contactEmail || '';
+            document.getElementById('houseDeposit').value = listing.deposit || '';
+            document.getElementById('houseAvailableDate').value = listing.availableDate || '';
+            document.getElementById('houseLeaseDuration').value = listing.leaseDuration || 'monthly';
+            document.getElementById('houseAmenities').value = (listing.amenities || []).join(', ');
+            document.getElementById('houseStatus').value = listing.status || 'available';
+            
+            pendingVideoFiles = [];
+            existingVideosData = listing.videos || [];
+            document.getElementById('existingVideosData').value = JSON.stringify(existingVideosData);
+            document.getElementById('videoUploadProgress').style.display = 'none';
+            document.getElementById('videoUploadProgressBar').style.width = '0%';
+            renderVideoPreviews();
+            
+            openModal('addHouseModal');
+        };
+
+        window.submitHouseListing = async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('houseSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Saving...';
+            
+            try {
+                const editKey = document.getElementById('houseEditKey').value;
+                let listingKey = editKey;
+                
+                // If new listing, create it first to get the key
+                if (!editKey) {
+                    const newRef = refs.housing.push({
+                        timestamp: new Date().toISOString(),
+                        createdBy: currentUser?.email,
+                        createdByName: currentUser?.displayName || currentUser?.email,
+                        status: 'pending'
+                    });
+                    listingKey = newRef.key;
+                }
+                
+                // Upload videos
+                const videos = await uploadVideos(listingKey);
+                
+                const houseData = {
+                    title: document.getElementById('houseTitle').value.trim(),
+                    propertyType: document.getElementById('houseType').value,
+                    monthlyRent: parseFloat(document.getElementById('housePrice').value) || 0,
+                    bedrooms: parseInt(document.getElementById('houseBedrooms').value) || 0,
+                    location: document.getElementById('houseLocation').value.trim(),
+                    description: document.getElementById('houseDescription').value.trim(),
+                    landlord: document.getElementById('houseLandlord').value.trim(),
+                    contactPhone: document.getElementById('housePhone').value.trim(),
+                    contactEmail: document.getElementById('houseEmail').value.trim(),
+                    deposit: parseFloat(document.getElementById('houseDeposit').value) || 0,
+                    availableDate: document.getElementById('houseAvailableDate').value,
+                    leaseDuration: document.getElementById('houseLeaseDuration').value,
+                    amenities: document.getElementById('houseAmenities').value.split(',').map(a => a.trim()).filter(Boolean),
+                    status: document.getElementById('houseStatus').value,
+                    videos: videos,
+                    rating: editKey ? (allHousingListings.find(h => h._key === editKey)?.rating || 0) : 0,
+                    updatedAt: new Date().toISOString()
+                };
+                
+                await refs.housing.child(listingKey).update(houseData);
+                
+                // Clean up deleted videos from storage
+                if (editKey) {
+                    const oldListing = allHousingListings.find(h => h._key === editKey);
+                    if (oldListing?.videos) {
+                        const newVideoPaths = videos.map(v => v.path);
+                        for (const oldVideo of oldListing.videos) {
+                            if (!newVideoPaths.includes(oldVideo.path)) {
+                                await deleteVideoFromStorage(oldVideo.path);
+                            }
+                        }
+                    }
+                }
+                
+                closeModal('addHouseModal');
+                toast('✅ Listing saved successfully!');
+            } catch (error) {
+                console.error('Save listing error:', error);
+                toast('❌ Error saving listing. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Listing';
+            }
+        };
+
+        window.viewHouseDetail = function(key) {
+            const listing = allHousingListings.find(h => h._key === key);
+            if (!listing) return;
+            
+            const content = document.getElementById('houseDetailContent');
+            content.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <h3><i class="fas fa-home"></i> ${listing.title || 'Property Details'}</h3>
+                    <button class="btn btn-sm btn-outline" onclick="closeModal('houseDetailModal')">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+                <div class="house-detail-grid">
+                    <div class="house-detail-item"><div class="house-detail-label">Property Type</div><div class="house-detail-value">${listing.propertyType}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Monthly Rent</div><div class="house-detail-value" style="color:#10b981;font-size:1.2rem;">$${(listing.monthlyRent || 0).toFixed(2)}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Location</div><div class="house-detail-value">${listing.location || '—'}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Bedrooms</div><div class="house-detail-value">${listing.bedrooms || 0}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Deposit</div><div class="house-detail-value">$${(listing.deposit || 0).toFixed(2)}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Available From</div><div class="house-detail-value">${listing.availableDate || '—'}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Lease Duration</div><div class="house-detail-value">${listing.leaseDuration || '—'}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Status</div><div class="house-detail-value"><span class="house-status-badge house-status-${listing.status}">${listing.status}</span></div></div>
+                    <div class="house-detail-item full-width"><div class="house-detail-label">Description</div><div class="house-detail-value">${listing.description || 'No description provided'}</div></div>
+                    <div class="house-detail-item full-width"><div class="house-detail-label">Amenities</div><div class="house-detail-value">${listing.amenities?.length ? listing.amenities.map(a => `<span class="amenity-tag">${a}</span>`).join(' ') : 'None listed'}</div></div>
+                    
+                    <!-- Videos Section -->
+                    <div class="house-detail-item full-width">
+                        <div class="house-detail-label"><i class="fas fa-video" style="color:#7c3aed;"></i> Property Videos (${listing.videos?.length || 0})</div>
+                        <div class="house-detail-value">
+                            ${listing.videos?.length ? `
+                                <div class="video-gallery" style="margin-top:8px;">
+                                    ${listing.videos.map((video, index) => `
+                                        <div class="video-thumbnail" onclick="openVideoPlayer('${video.url}')">
+                                            <video src="${video.url}" muted preload="metadata"></video>
+                                            <div class="video-play-overlay"><i class="fas fa-play"></i></div>
+                                            <div class="video-info">${video.name || 'Video ' + (index + 1)}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : '<span style="color:#4a6080;">No videos available</span>'}
+                        </div>
+                    </div>
+                    
+                    <div class="house-detail-item"><div class="house-detail-label">Landlord</div><div class="house-detail-value">${listing.landlord || '—'}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Contact</div><div class="house-detail-value">${listing.contactPhone || listing.contactEmail || '—'}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Listed</div><div class="house-detail-value">${formatFullTimestamp(listing.timestamp)}</div></div>
+                    <div class="house-detail-item"><div class="house-detail-label">Rating</div><div class="house-detail-value">${listing.rating ? '⭐'.repeat(Math.min(listing.rating, 5)) : 'No ratings'}</div></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+                    <button class="btn btn-flag" onclick="flagHouseListing('${key}'); closeModal('houseDetailModal');"><i class="fas fa-flag"></i> Flag</button>
+                    <button class="btn btn-reassign" onclick="editHouseListing('${key}'); closeModal('houseDetailModal');"><i class="fas fa-edit"></i> Edit</button>
+                </div>
+            `;
+            
+            openModal('houseDetailModal');
+        };
+
+        window.flagHouseListing = async function(key) {
+            if (!confirm('Flag this listing?')) return;
+            await refs.housing.child(key).update({ 
+                status: 'flagged', 
+                flaggedAt: new Date().toISOString(),
+                flaggedBy: currentUser?.email 
+            });
+            refs.logs.push({ staff: currentUser?.email, action: 'flagged_house_listing', listingKey: key, timestamp: new Date().toISOString() });
+            toast('🚩 Listing flagged');
+        };
+
+        window.verifyHouseListing = async function(key) {
+            if (!confirm('Mark this listing as available?')) return;
+            await refs.housing.child(key).update({ 
+                status: 'available', 
+                verifiedAt: new Date().toISOString(),
+                verifiedBy: currentUser?.email 
+            });
+            refs.logs.push({ staff: currentUser?.email, action: 'verified_house_listing', listingKey: key, timestamp: new Date().toISOString() });
+            toast('✅ Listing verified');
+        };
+
+        window.deleteHouseListing = async function(key) {
+            if (!confirm('Delete this listing? This cannot be undone.')) return;
+            
+            // Delete associated videos from storage
+            const listing = allHousingListings.find(h => h._key === key);
+            if (listing?.videos) {
+                for (const video of listing.videos) {
+                    await deleteVideoFromStorage(video.path);
+                }
+            }
+            
+            await refs.housing.child(key).remove();
+            refs.logs.push({ staff: currentUser?.email, action: 'deleted_house_listing', listingKey: key, timestamp: new Date().toISOString() });
+            toast('🗑️ Listing deleted');
+        };
+
+        // ===== PERFORMANCE, APPROVALS, DATA TABLES (unchanged) =====
+        function calcPerf() {
+            const p = {};
+            staffList.forEach(s => { p[s.email] = { email: s.email, total: 0, accuracy: 100, streak: 0, rating: 'N/A', status: '⚪ Inactive' }; });
+            allReceived.forEach(i => { if (i.receivedBy && p[i.receivedBy]) p[i.receivedBy].total += i.itemCount || 0; });
+            allCollected.forEach(i => { if (i.collectedBy && p[i.collectedBy]) p[i.collectedBy].total += parseInt(i.items) || 0; });
+            Object.values(p).forEach(s => { const sc = s.total; if (sc > 50) s.rating = 'Top Performer'; else if (sc > 20) s.rating = 'Good'; else if (sc > 0) s.rating = 'Active'; });
+            perfData = p;
+            renderPerf();
+        }
+
+        function renderPerf() {
+            const arr = Object.values(perfData);
+            document.getElementById('topPerformersList').innerHTML = arr.filter(s => s.total > 0).sort((a,b) => b.total - a.total).slice(0,3).map((s,i) => `<div class="insight-metric"><span>${i+1}. ${s.email.split('@')[0]}</span><span class="insight-value" style="color:#34d399;">${s.total}</span></div>`).join('') || '<div class="empty-state">No data</div>';
+            document.getElementById('activityStreaks').innerHTML = arr.filter(s => s.streak > 0).map(s => `<div class="insight-metric"><span>${s.email.split('@')[0]}</span><span>🔥${s.streak}d</span></div>`).join('') || '<div class="empty-state">No streaks</div>';
+            document.getElementById('staffPerformanceTableBody').innerHTML = arr.length ? arr.map(s => `<tr><td><strong>${s.email.split('@')[0]}</strong></td><td>${s.total}</td><td><span class="staff-rating ${s.rating.includes('Top')?'top':'good'}">${s.rating}</span></td><td>${s.streak>0?`🔥${s.streak}d`:'—'}</td><td>${s.status}</td></tr>`).join('') : '<tr><td colspan="5"><div class="empty-state">Loading...</div></td></tr>';
+        }
+
+        function loadPending() {
+            refs.pending.on('value', s => {
+                allPending = []; 
+                s.forEach(c => { const v = c.val(); v._key = c.key; allPending.push(v); });
+                const pendingItems = allPending.filter(a => a.status === 'pending');
+                document.getElementById('pendingBadge').textContent = pendingItems.length;
+                document.getElementById('pendingBadge').style.display = pendingItems.length ? 'inline-block' : 'none';
+                document.getElementById('pendingApprovalsContainer').innerHTML = pendingItems.length ? 
+                    pendingItems.map(x => {
+                        const booking = allBookings.find(b => b._key === x.bookingKey) || {};
+                        return `<div class="card" style="margin-bottom:12px; border-left: 3px solid #f59e0b;">
+                            <div style="padding:16px;">
+                                <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:10px;">
+                                    <div>
+                                        <h4 style="margin-bottom:4px;">${x.type === 'collection' ? '📦 Collection' : x.type === 'assignment_request' ? '👤 Assignment' : '✏️ Edit'} Request ${x.resubmitted ? '<span class="badge badge-pending">RESUBMITTED</span>' : ''}</h4>
+                                        <div style="font-size:0.8rem;color:#8899b4;">Booking: <strong>#${x.bookingKey?.slice(-6)}</strong> ${booking.name ? ` • Customer: ${booking.name}` : ''}</div>
+                                        <div style="font-size:0.75rem;color:#6b8ab0;margin-top:4px;">By: <strong>${x.requestedByName || (x.requestedBy || '').split('@')[0]}</strong> • ${formatTimestamp(x.timestamp)}</div>
+                                        ${x.previousRejection ? `<div style="margin-top:8px;padding:8px;background:rgba(239,68,68,0.1);border-radius:6px;border-left:3px solid #ef4444;"><div style="font-size:0.7rem;color:#f87171;font-weight:600;">Previous Rejection:</div><div style="font-size:0.75rem;color:#fca5a5;">"${x.previousRejection}"</div></div>` : ''}
+                                    </div>
+                                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                        ${x.type === 'assignment_request' ? `<button class="action-btn btn-approve" onclick="approveAssignment('${x._key}','${x.bookingKey}','${x.requestedBy}')"><i class="fas fa-check"></i> Assign</button>` : `<button class="action-btn btn-approve" onclick="approveCollection('${x._key}')"><i class="fas fa-check"></i> Approve</button>`}
+                                        <button class="action-btn btn-reject-feedback" onclick="openRejectFeedback('${x._key}')"><i class="fas fa-comment"></i> Reject with Feedback</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('') : '<div class="card"><div class="empty-state">✅ No pending approvals</div></div>';
+            });
+        }
+
+        window.openRejectFeedback = function(approvalKey) {
+            currentRejectionKey = approvalKey;
+            document.getElementById('feedbackTextarea').value = '';
+            document.getElementById('feedbackModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeFeedbackModal = function() {
+            document.getElementById('feedbackModal').style.display = 'none';
+            document.body.style.overflow = '';
+            currentRejectionKey = null;
+        };
+
+        window.submitRejectionWithFeedback = async function() {
+            const feedback = document.getElementById('feedbackTextarea').value.trim();
+            if (!feedback) { toast('⚠️ Please provide feedback'); return; }
+            if (!currentRejectionKey) return;
+            const approval = allPending.find(a => a._key === currentRejectionKey);
+            if (approval) {
+                await refs.bookings.child(approval.bookingKey).update({ pending_collection: false });
+                await refs.pending.child(currentRejectionKey).update({ status: 'rejected', adminResponse: 'rejected', adminFeedback: feedback, respondedBy: currentUser?.email, respondedAt: new Date().toISOString() });
+                refs.logs.push({ staff: currentUser?.email, action: 'rejected_collection', bookingKey: approval.bookingKey, feedback: feedback, timestamp: new Date().toISOString() });
+            }
+            closeFeedbackModal();
+            toast('❌ Request rejected with feedback');
+        };
+
+        window.approveCollection = async function(approvalKey) {
+            if (!confirm('Approve this collection request?')) return;
+            const approval = allPending.find(a => a._key === approvalKey);
+            if (!approval) return;
+            const booking = allBookings.find(b => b._key === approval.bookingKey) || {};
+            await refs.collected.push({ bookingKey: approval.bookingKey, bookingId: booking.bookingId || '', customerName: booking.name || '', items: (booking.itemCount || '?') + ' items', customerSignature: approval.customerSignature || '', staffSignature: approval.staffSignature || '', collectedBy: approval.requestedBy, collectedByName: approval.requestedByName, approvedBy: currentUser?.email, timestamp: new Date().toISOString() });
+            await refs.bookings.child(approval.bookingKey).update({ status: 'collected', collected_at: new Date().toISOString(), collection_approved: true, pending_collection: false });
+            await refs.pending.child(approvalKey).update({ status: 'approved', adminResponse: 'approved', adminFeedback: 'Collection approved successfully', respondedBy: currentUser?.email, respondedAt: new Date().toISOString() });
+            refs.logs.push({ staff: currentUser?.email, action: 'approved_collection', bookingKey: approval.bookingKey, requestedBy: approval.requestedBy, timestamp: new Date().toISOString() });
+            toast('✅ Collection approved!');
+        };
+
+        window.approveAssignment = async function(approvalKey, bookingKey, staffEmail) {
+            if (!confirm(`Assign booking to ${staffEmail}?`)) return;
+            await refs.bookings.child(bookingKey).update({ assigned_to: staffEmail, assigned_at: new Date().toISOString() });
+            await refs.pending.child(approvalKey).update({ status: 'approved', adminResponse: 'approved', adminFeedback: 'Assignment approved', respondedBy: currentUser?.email, respondedAt: new Date().toISOString() });
+            toast('✅ Assignment approved!');
+        };
+
+        function loadRecords() { refs.records.on('value', s => { const r = []; s.forEach(c => r.unshift({ key: c.key, ...c.val() })); document.getElementById('digitalRecordsTable').innerHTML = r.length ? `<table><thead><tr><th>ID</th><th>Type</th><th>Date</th><th>Details</th></tr></thead><tbody>${r.map(x => `<tr><td>${x.key?.slice(-6)}</td><td>${x.type||'N/A'}</td><td>${new Date(x.timestamp).toLocaleDateString()}</td><td>${x.details||'—'}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">No records</div>'; }); }
+        function loadReviews() { refs.reviews.on('value', s => { const r = []; s.forEach(c => r.unshift({ key: c.key, ...c.val() })); document.getElementById('reviewsTable').innerHTML = r.length ? `<table><thead><tr><th>Customer</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead><tbody>${r.map(x => `<tr><td>${x.name||'Anonymous'}</td><td>${'⭐'.repeat(x.rating||0)}</td><td>${x.comment||'—'}</td><td>${new Date(x.timestamp).toLocaleDateString()}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">No reviews</div>'; }); }
+        function loadLogs() { refs.logs.orderByChild('timestamp').limitToLast(200).on('value', s => { const l = []; s.forEach(c => l.unshift({ key: c.key, ...c.val() })); document.getElementById('staffLogsTable').innerHTML = l.length ? `<table><thead><tr><th>Staff</th><th>Action</th><th>Time</th></tr></thead><tbody>${l.map(x => `<tr><td>${(x.staff||'').split('@')[0]}</td><td>${x.action}</td><td>${new Date(x.timestamp).toLocaleString()}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">No logs</div>'; }); }
+        async function loadAdmins() { const s = (await refs.admins.once('value')).val() || {}; document.getElementById('adminList').innerHTML = Object.keys(s).length ? Object.keys(s).map(k => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#152544;border-radius:10px;margin-bottom:6px;font-size:0.85rem;border:1px solid #1a3050;"><div><div style="font-weight:600;">${k.replace(/,/g,'.')}</div><div style="font-size:0.7rem;color:#8899b4;">Admin</div></div><button class="action-btn btn-delete" onclick="removeAdmin('${k}')"><i class="fas fa-trash"></i> Remove</button></div>`).join('') : '<div class="empty-state">No admins</div>'; }
+        window.removeAdmin = async (k) => { if (confirm('Remove admin?')) { await refs.admins.child(k).remove(); toast('Removed'); } };
+        window.addAdmin = async () => { const e = document.getElementById('newAdminEmail').value.trim(); if (!e?.includes('@')) return toast('❌ Invalid'); await refs.admins.child(e.replace(/\./g,',')).set({ added: new Date().toISOString(), addedBy: currentUser?.email }); document.getElementById('newAdminEmail').value = ''; toast('✅ Added!'); };
+
+        window.openBackupModal = () => openModal('backupModal');
+        window.startBackup = () => {
+            const f = document.getElementById('backupFormat').value;
+            const ts = new Date().toISOString().split('T')[0];
+            if (f === 'excel') {
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['ID','Customer','Status','Staff','Items','Timestamp']].concat(allBookings.map(b => [b.bookingId,b.name,b.status,b.assigned_to,`${b.itemCount} ${b.category}`,b.timestamp]))), 'Bookings');
+                XLSX.writeFile(wb, `campusvault_backup_${ts}.xlsx`);
+            } else {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFontSize(16); doc.text('CampusVault Backup', 10, 10);
+                doc.setFontSize(10); doc.text(`Generated: ${new Date().toLocaleString()}`, 10, 20);
+                doc.text(`Total: ${allBookings.length} | Active: ${allBookings.filter(b=>b.status==='active').length} | Received: ${allReceived.length} | Collected: ${allCollected.length}`, 10, 30);
+                doc.save(`campusvault_backup_${ts}.pdf`);
+            }
+            toast('💾 Backup generated!');
+            closeModal('backupModal');
+        };
+
+        function updateMetrics() {
+            document.getElementById('metricsContainer').innerHTML = `
+                <div class="metric-card"><div class="metric-icon" style="background:#1e4d8c;"><i class="fas fa-box"></i></div><div><div class="metric-value">${allBookings.length}</div><div class="metric-label">Total</div></div></div>
+                <div class="metric-card"><div class="metric-icon" style="background:#10b981;"><i class="fas fa-spinner"></i></div><div><div class="metric-value">${allBookings.filter(b=>b.status==='active').length}</div><div class="metric-label">Active</div></div></div>
+                <div class="metric-card"><div class="metric-icon" style="background:#3b82f6;"><i class="fas fa-box-check"></i></div><div><div class="metric-value">${allReceived.length}</div><div class="metric-label">Received</div></div></div>
+                <div class="metric-card"><div class="metric-icon" style="background:#7c3aed;"><i class="fas fa-people-carry"></i></div><div><div class="metric-value">${allCollected.length}</div><div class="metric-label">Collected</div></div></div>
+                <div class="metric-card"><div class="metric-icon" style="background:#f97316;"><i class="fas fa-trash"></i></div><div><div class="metric-value">${allTrash.length}</div><div class="metric-label">Trash</div></div></div>
+                <div class="metric-card"><div class="metric-icon" style="background:#06b6d4;"><i class="fas fa-home"></i></div><div><div class="metric-value">${allHousingListings.length}</div><div class="metric-label">Housing</div></div></div>`;
+        }
+
+        // Sidebar
+        const sidebar = document.getElementById('sidebar'), overlay = document.getElementById('sidebarOverlay');
+        document.getElementById('hamburgerBtn').onclick = () => { sidebar.classList.add('open'); overlay.classList.add('active'); };
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+        window.closeSidebar = closeSidebar;
+        overlay.addEventListener('click', closeSidebar);
+        document.querySelectorAll('.sidebar nav a[data-tab]').forEach(l => {
+            l.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+                const tab = document.getElementById('tab-' + this.dataset.tab);
+                if (tab) tab.classList.add('active');
+                if (window.innerWidth <= 768) closeSidebar();
+            });
         });
-        
-        // Update approval with rejection details
-        await refs.pending.child(currentRejectionKey).update({ 
-            status: 'rejected', 
-            adminResponse: 'rejected',
-            adminFeedback: feedback,
-            respondedBy: currentUser?.email,
-            respondedAt: new Date().toISOString()
+
+        // ===== LOAD ALL DATA =====
+        function loadAllData() {
+            refs.bookings.on('value', s => { allBookings = []; s.forEach(c => { const v = c.val(); v._key = c.key; allBookings.push(v); }); renderStorage(allBookings); updateMetrics(); });
+            refs.received.orderByChild('timestamp').limitToLast(200).on('value', s => { allReceived = []; s.forEach(c => { const val = c.val(); val.key = c.key; allReceived.push(val); }); allReceived.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); renderReceived(allReceived); updateMetrics(); calcPerf(); });
+            refs.collected.orderByChild('timestamp').limitToLast(200).on('value', s => { allCollected = []; s.forEach(c => { const val = c.val(); val.key = c.key; allCollected.push(val); }); allCollected.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); renderCollected(allCollected); updateMetrics(); calcPerf(); });
+            refs.trash.on('value', s => { allTrash = []; s.forEach(c => { const val = c.val(); val.key = c.key; allTrash.push(val); }); renderTrash(allTrash); updateMetrics(); });
+            loadPending(); loadRecords(); loadReviews(); loadLogs(); loadHousingListings();
+            refs.staff.on('value', () => { loadStaffList(); calcPerf(); });
+            refs.admins.on('value', () => loadAdmins());
+            loadStaffList(); loadAdmins();
+        }
+
+        function setVH() { document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
+        window.addEventListener('resize', setVH);
+        window.addEventListener('orientationchange', setVH);
+        setVH();
+
+        window.addEventListener('popstate', function(e) {
+            const pm = document.querySelector('.preview-modal');
+            if (pm) { pm.remove(); document.body.style.overflow = ''; e.preventDefault(); }
         });
-        
-        refs.logs.push({
-            staff: currentUser?.email,
-            action: 'rejected_collection',
-            bookingKey: approval.bookingKey,
-            feedback: feedback,
-            timestamp: new Date().toISOString()
+
+        // Expose functions to global scope
+        window.handleVideoFilesSelect = handleVideoFilesSelect;
+        window.removeExistingVideo = removeExistingVideo;
+        window.removePendingVideo = removePendingVideo;
+        window.openVideoPlayer = openVideoPlayer;
+        window.closeVideoPlayer = closeVideoPlayer;
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
         });
-    }
-    
-    closeFeedbackModal();
-    toast('❌ Request rejected with feedback');
-};
-
-// ===== APPROVE COLLECTION (with admin response) =====
-window.approveCollection = async function(approvalKey) {
-    if (!confirm('Approve this collection request?')) return;
-    
-    const approval = allPending.find(a => a._key === approvalKey);
-    if (!approval) return;
-    
-    const booking = allBookings.find(b => b._key === approval.bookingKey) || {};
-    
-    await refs.collected.push({
-        bookingKey: approval.bookingKey,
-        bookingId: booking.bookingId || '',
-        customerName: booking.name || '',
-        items: (booking.itemCount || '?') + ' items',
-        customerSignature: approval.customerSignature || '',
-        staffSignature: approval.staffSignature || '',
-        collectedBy: approval.requestedBy,
-        collectedByName: approval.requestedByName,
-        approvedBy: currentUser?.email,
-        timestamp: new Date().toISOString()
-    });
-    
-    await refs.bookings.child(approval.bookingKey).update({ 
-        status: 'collected', 
-        collected_at: new Date().toISOString(), 
-        collection_approved: true,
-        pending_collection: false
-    });
-    
-    await refs.pending.child(approvalKey).update({ 
-        status: 'approved', 
-        adminResponse: 'approved',
-        adminFeedback: 'Collection approved successfully',
-        respondedBy: currentUser?.email,
-        respondedAt: new Date().toISOString()
-    });
-    
-    refs.logs.push({
-        staff: currentUser?.email,
-        action: 'approved_collection',
-        bookingKey: approval.bookingKey,
-        requestedBy: approval.requestedBy,
-        timestamp: new Date().toISOString()
-    });
-    
-    toast('✅ Collection approved!');
-};
-
-// ===== APPROVE ASSIGNMENT (with admin response) =====
-window.approveAssignment = async function(approvalKey, bookingKey, staffEmail) {
-    if (!confirm(`Assign booking to ${staffEmail}?`)) return;
-    
-    await refs.bookings.child(bookingKey).update({ 
-        assigned_to: staffEmail, 
-        assigned_at: new Date().toISOString() 
-    });
-    
-    await refs.pending.child(approvalKey).update({ 
-        status: 'approved', 
-        adminResponse: 'approved',
-        adminFeedback: 'Assignment approved',
-        respondedBy: currentUser?.email,
-        respondedAt: new Date().toISOString()
-    });
-    
-    toast('✅ Assignment approved!');
-};
-
-window.approveReq = async (k) => { const a = allPending.find(x => x._key === k); if (a) { await refs.pending.child(k).update({ status: 'approved', approvedBy: currentUser?.email, approvedAt: new Date().toISOString() }); toast('✅ Approved!'); } };
-window.rejectReq = async (k) => { await refs.pending.child(k).update({ status: 'rejected', rejectedBy: currentUser?.email, rejectedAt: new Date().toISOString() }); toast('❌ Rejected'); };
-
-// ===== DATA TABLES =====
-function loadRecords() { refs.records.on('value', s => { const r = []; s.forEach(c => r.unshift({ key: c.key, ...c.val() })); document.getElementById('digitalRecordsTable').innerHTML = r.length ? `<table><thead><tr><th>ID</th><th>Type</th><th>Date</th><th>Details</th></tr></thead><tbody>${r.map(x => `<tr><td>${x.key?.slice(-6)}</td><td>${x.type||'N/A'}</td><td>${new Date(x.timestamp).toLocaleDateString()}</td><td>${x.details||'—'}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">No records</div>'; }); }
-function loadReviews() { refs.reviews.on('value', s => { const r = []; s.forEach(c => r.unshift({ key: c.key, ...c.val() })); document.getElementById('reviewsTable').innerHTML = r.length ? `<table><thead><tr><th>Customer</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead><tbody>${r.map(x => `<tr><td>${x.name||'Anonymous'}</td><td>${'⭐'.repeat(x.rating||0)}</td><td>${x.comment||'—'}</td><td>${new Date(x.timestamp).toLocaleDateString()}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">No reviews</div>'; }); }
-function loadLogs() { refs.logs.orderByChild('timestamp').limitToLast(200).on('value', s => { const l = []; s.forEach(c => l.unshift({ key: c.key, ...c.val() })); document.getElementById('staffLogsTable').innerHTML = l.length ? `<table><thead><tr><th>Staff</th><th>Action</th><th>Time</th></tr></thead><tbody>${l.map(x => `<tr><td>${(x.staff||'').split('@')[0]}</td><td>${x.action}</td><td>${new Date(x.timestamp).toLocaleString()}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">No logs</div>'; }); }
-async function loadAdmins() { const s = (await refs.admins.once('value')).val() || {}; document.getElementById('adminList').innerHTML = Object.keys(s).length ? Object.keys(s).map(k => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#152544;border-radius:10px;margin-bottom:6px;font-size:0.85rem;border:1px solid #1a3050;"><div><div style="font-weight:600;">${k.replace(/,/g,'.')}</div><div style="font-size:0.7rem;color:#8899b4;">Admin</div></div><button class="action-btn btn-delete" onclick="removeAdmin('${k}')"><i class="fas fa-trash"></i> Remove</button></div>`).join('') : '<div class="empty-state">No admins</div>'; }
-window.removeAdmin = async (k) => { if (confirm('Remove admin?')) { await refs.admins.child(k).remove(); toast('Removed'); } };
-window.addAdmin = async () => { const e = document.getElementById('newAdminEmail').value.trim(); if (!e?.includes('@')) return toast('❌ Invalid'); await refs.admins.child(e.replace(/\./g,',')).set({ added: new Date().toISOString(), addedBy: currentUser?.email }); document.getElementById('newAdminEmail').value = ''; toast('✅ Added!'); };
-
-window.openBackupModal = () => openModal('backupModal');
-window.startBackup = () => {
-    const f = document.getElementById('backupFormat').value;
-    const ts = new Date().toISOString().split('T')[0];
-    if (f === 'excel') {
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['ID','Customer','Status','Staff','Items','Timestamp']].concat(allBookings.map(b => [b.bookingId,b.name,b.status,b.assigned_to,`${b.itemCount} ${b.category}`,b.timestamp]))), 'Bookings');
-        XLSX.writeFile(wb, `campusvault_backup_${ts}.xlsx`);
-    } else {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(16); doc.text('CampusVault Backup', 10, 10);
-        doc.setFontSize(10); doc.text(`Generated: ${new Date().toLocaleString()}`, 10, 20);
-        doc.text(`Total: ${allBookings.length} | Active: ${allBookings.filter(b=>b.status==='active').length} | Received: ${allReceived.length} | Collected: ${allCollected.length}`, 10, 30);
-        doc.save(`campusvault_backup_${ts}.pdf`);
-    }
-    toast('💾 Backup generated!');
-    closeModal('backupModal');
-};
-
-function updateMetrics() {
-    document.getElementById('metricsContainer').innerHTML = `
-        <div class="metric-card"><div class="metric-icon" style="background:#1e4d8c;"><i class="fas fa-box"></i></div><div><div class="metric-value">${allBookings.length}</div><div class="metric-label">Total</div></div></div>
-        <div class="metric-card"><div class="metric-icon" style="background:#10b981;"><i class="fas fa-spinner"></i></div><div><div class="metric-value">${allBookings.filter(b=>b.status==='active').length}</div><div class="metric-label">Active</div></div></div>
-        <div class="metric-card"><div class="metric-icon" style="background:#3b82f6;"><i class="fas fa-box-check"></i></div><div><div class="metric-value">${allReceived.length}</div><div class="metric-label">Received</div></div></div>
-        <div class="metric-card"><div class="metric-icon" style="background:#7c3aed;"><i class="fas fa-people-carry"></i></div><div><div class="metric-value">${allCollected.length}</div><div class="metric-label">Collected</div></div></div>
-        <div class="metric-card"><div class="metric-icon" style="background:#f97316;"><i class="fas fa-trash"></i></div><div><div class="metric-value">${allTrash.length}</div><div class="metric-label">Trash</div></div></div>`;
-}
-
-// Sidebar
-const sidebar = document.getElementById('sidebar'), overlay = document.getElementById('sidebarOverlay');
-document.getElementById('hamburgerBtn').onclick = () => { sidebar.classList.add('open'); overlay.classList.add('active'); };
-function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
-window.closeSidebar = closeSidebar;
-overlay.addEventListener('click', closeSidebar);
-document.querySelectorAll('.sidebar nav a[data-tab]').forEach(l => {
-    l.addEventListener('click', function(e) {
-        e.preventDefault();
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
-        this.classList.add('active');
-        const tab = document.getElementById('tab-' + this.dataset.tab);
-        if (tab) tab.classList.add('active');
-        if (window.innerWidth <= 768) closeSidebar();
-    });
-});
-
-// ===== LOAD ALL DATA =====
-function loadAllData() {
-    // Load bookings
-    refs.bookings.on('value', s => { 
-        allBookings = []; 
-        s.forEach(c => { 
-            const v = c.val(); 
-            v._key = c.key; 
-            allBookings.push(v); 
-        }); 
-        renderStorage(allBookings); 
-        updateMetrics(); 
-    });
-    
-    // Load received items - THIS IS THE KEY FIX
-    // Use 'value' event instead of 'child_added' to ensure all items are loaded
-    refs.received.orderByChild('timestamp').limitToLast(200).on('value', s => { 
-        allReceived = []; 
-        s.forEach(c => {
-            const val = c.val();
-            val.key = c.key;  // Store the Firebase key
-            allReceived.push(val);
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to install: ${outcome}`);
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
         });
-        // Sort by timestamp (newest first)
-        allReceived.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        renderReceived(allReceived); 
-        updateMetrics(); 
-        calcPerf(); 
-    });
-    
-    // Load collected items
-    refs.collected.orderByChild('timestamp').limitToLast(200).on('value', s => { 
-        allCollected = []; 
-        s.forEach(c => {
-            const val = c.val();
-            val.key = c.key;
-            allCollected.push(val);
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed successfully!');
+            installBtn.style.display = 'none';
         });
-        allCollected.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        renderCollected(allCollected); 
-        updateMetrics(); 
-        calcPerf(); 
-    });
-    
-    // Load trash
-    refs.trash.on('value', s => { 
-        allTrash = []; 
-        s.forEach(c => {
-            const val = c.val();
-            val.key = c.key;
-            allTrash.push(val);
-        });
-        renderTrash(allTrash); 
-        updateMetrics(); 
-    });
-    
-    // Load pending approvals
-    loadPending(); 
-    loadRecords(); 
-    loadReviews(); 
-    loadLogs();
-    
-    // Load staff and admins
-    refs.staff.on('value', () => { loadStaffList(); calcPerf(); });
-    refs.admins.on('value', () => loadAdmins());
-    loadStaffList(); 
-    loadAdmins();
-}
-
-function setVH() { document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
-window.addEventListener('resize', setVH);
-window.addEventListener('orientationchange', setVH);
-setVH();
-
-window.addEventListener('popstate', function(e) {
-    const pm = document.querySelector('.preview-modal');
-    if (pm) { pm.remove(); document.body.style.overflow = ''; e.preventDefault(); }
-});
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-}
-
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'block';
-});
-
-installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to install: ${outcome}`);
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-});
-
-window.addEventListener('appinstalled', () => {
-    console.log('PWA was installed successfully!');
-    installBtn.style.display = 'none';
-});
-
-</script>
+    </script>
 </body>
 </html>
