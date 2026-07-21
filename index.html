@@ -2423,7 +2423,7 @@
         });
           if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw2.js')
+      navigator.serviceWorker.register('/sw.js')
         .then(reg => console.log('Upstash Caching Proxy Active!', reg.scope))
         .catch(err => console.error('Service Worker failed:', err));
     });
