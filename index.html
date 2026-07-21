@@ -261,6 +261,20 @@
             justify-content: center;
             font-size: 0.7rem;
         }
+        .video-thumbnail .video-uploading-indicator {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(147, 51, 234, 0.9);
+            border: none;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
 
         /* Video Upload Area */
         .video-upload-area {
@@ -286,19 +300,25 @@
             color: #8899b4;
             margin: 4px 0;
         }
-        .video-upload-progress {
+        .video-upload-progress-container {
             width: 100%;
-            height: 4px;
             background: #1a3050;
-            border-radius: 2px;
-            margin-top: 8px;
+            border-radius: 10px;
+            margin-top: 12px;
             overflow: hidden;
             display: none;
         }
         .video-upload-progress-bar {
-            height: 100%;
+            height: 6px;
             background: linear-gradient(135deg, #7c3aed, #06b6d4);
-            transition: width 0.3s;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .video-upload-status {
+            font-size: 0.75rem;
+            color: #a78bfa;
+            margin-top: 8px;
+            display: none;
         }
 
         /* Video Player Modal */
@@ -990,7 +1010,7 @@
         </main>
     </div>
 
-    <!-- Existing Modals (Receive Items, Collection, Backup, Feedback) remain unchanged -->
+    <!-- Existing Modals -->
     <div class="modal-overlay" id="receiveItemsModal">
         <div class="modal-content">
             <h3>Receive Items</h3>
@@ -1068,14 +1088,15 @@
                 
                 <!-- Video Upload Section -->
                 <div class="form-group">
-                    <label><i class="fas fa-video" style="color:#7c3aed;"></i> Property Videos</label>
+                    <label><i class="fas fa-video" style="color:#7c3aed;"></i> Property Videos <span style="font-size:0.7rem;color:#8899b4;">(Uploads happen after saving)</span></label>
                     <div class="video-upload-area" id="videoUploadArea" onclick="document.getElementById('videoFileInput').click()">
                         <i class="fas fa-cloud-upload-alt"></i>
-                        <p>Click to upload property videos</p>
+                        <p>Click to select property videos</p>
                         <p style="font-size:0.7rem;opacity:0.7;">MP4, WebM, MOV (Max 50MB each)</p>
-                        <div class="video-upload-progress" id="videoUploadProgress">
+                        <div class="video-upload-progress-container" id="videoUploadProgress">
                             <div class="video-upload-progress-bar" id="videoUploadProgressBar" style="width:0%"></div>
                         </div>
+                        <div class="video-upload-status" id="videoUploadStatus"></div>
                     </div>
                     <input type="file" id="videoFileInput" accept="video/*" multiple style="display:none;" onchange="handleVideoFilesSelect(event)">
                     <div class="video-gallery" id="videoPreviewGallery"></div>
@@ -1158,6 +1179,7 @@
         let housingListener = null;
         let pendingVideoFiles = [];
         let existingVideosData = [];
+        let isUploadingVideos = false;
 
         let securityStats = {
             blockedToday: 0, activeSessions: 0, failedAttempts: 0,
@@ -1278,7 +1300,8 @@
                     <div class="video-thumbnail">
                         <video src="${url}" muted></video>
                         <div class="video-play-overlay"><i class="fas fa-clock"></i></div>
-                        <div class="video-info">${file.name} (Pending)</div>
+                        <div class="video-uploading-indicator"><i class="fas fa-spinner fa-spin"></i> Pending</div>
+                        <div class="video-info">${file.name}</div>
                         <button class="video-delete-btn" onclick="event.stopPropagation(); removePendingVideo(${index})"><i class="fas fa-times"></i></button>
                     </div>`;
             });
@@ -1292,24 +1315,37 @@
         }
 
         function removePendingVideo(index) {
+            if (pendingVideoFiles[index]) {
+                const url = URL.createObjectURL(pendingVideoFiles[index]);
+                URL.revokeObjectURL(url);
+            }
             pendingVideoFiles.splice(index, 1);
             renderVideoPreviews();
         }
 
-        // Upload videos to Firebase Storage
-        async function uploadVideos(listingKey) {
+        // Upload videos in background (non-blocking)
+        async function uploadVideosInBackground(listingKey) {
             if (pendingVideoFiles.length === 0) return existingVideosData;
             
-            const progressBar = document.getElementById('videoUploadProgress');
-            const progressBarFill = document.getElementById('videoUploadProgressBar');
-            progressBar.style.display = 'block';
+            const progressContainer = document.getElementById('videoUploadProgress');
+            const progressBar = document.getElementById('videoUploadProgressBar');
+            const statusText = document.getElementById('videoUploadStatus');
             
-            const uploadedVideos = [...existingVideosData];
+            progressContainer.style.display = 'block';
+            statusText.style.display = 'block';
+            progressBar.style.width = '0%';
+            
+            const allVideos = [...existingVideosData];
+            let totalProgress = 0;
+            const progressPerFile = 100 / pendingVideoFiles.length;
             
             for (let i = 0; i < pendingVideoFiles.length; i++) {
                 const file = pendingVideoFiles[i];
-                const filePath = `housing_videos/${listingKey || 'new'}/${Date.now()}_${file.name}`;
+                const safeFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+                const filePath = `housing_videos/${listingKey}/${Date.now()}_${safeFileName}`;
                 const storageRef = storage.ref(filePath);
+                
+                statusText.textContent = `Uploading ${i + 1}/${pendingVideoFiles.length}: ${file.name}`;
                 
                 try {
                     const uploadTask = storageRef.put(file);
@@ -1317,33 +1353,40 @@
                     await new Promise((resolve, reject) => {
                         uploadTask.on('state_changed',
                             (snapshot) => {
-                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                                progressBarFill.style.width = progress + '%';
+                                const fileProgress = (snapshot.bytesTransferred / snapshot.totalBytes) * progressPerFile;
+                                totalProgress = (i * progressPerFile) + fileProgress;
+                                progressBar.style.width = Math.min(totalProgress, 100) + '%';
                             },
-                            (error) => reject(error),
+                            (error) => {
+                                console.error('Upload error:', error);
+                                reject(error);
+                            },
                             () => resolve()
                         );
                     });
                     
                     const downloadUrl = await storageRef.getDownloadURL();
-                    uploadedVideos.push({
+                    allVideos.push({
                         url: downloadUrl,
                         name: file.name,
                         path: filePath,
                         size: file.size,
                         uploadedAt: new Date().toISOString()
                     });
+                    
                 } catch (error) {
                     console.error('Video upload error:', error);
-                    toast('⚠️ Failed to upload video: ' + file.name);
+                    statusText.textContent = `⚠️ Failed to upload: ${file.name}`;
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
             }
             
-            progressBar.style.display = 'none';
-            progressBarFill.style.width = '0%';
+            progressContainer.style.display = 'none';
+            statusText.style.display = 'none';
+            progressBar.style.width = '0%';
             pendingVideoFiles = [];
             
-            return uploadedVideos;
+            return allVideos;
         }
 
         // Delete video from storage
@@ -1524,7 +1567,7 @@
             toast('✅ Staff added!');
         };
 
-        // ===== BOOKING FUNCTIONS (unchanged) =====
+        // ===== BOOKING FUNCTIONS =====
         window.openReceive = (key) => {
             const b = allBookings.find(x => x._key === key);
             if (!b) return;
@@ -1599,7 +1642,7 @@
             toast('✅ Items collected!');
         };
 
-        // ===== PREVIEW, ASSIGN STAFF, TRASH FUNCTIONS (unchanged) =====
+        // ===== PREVIEW, ASSIGN STAFF, TRASH FUNCTIONS =====
         window.showPreview = (key) => {
             let booking = allBookings.find(b => b._key === key);
             let isReceived = false;
@@ -1727,7 +1770,7 @@
         window.trashAllReviews = () => { if (confirm('Delete all reviews?')) { refs.reviews.remove(); toast('Deleted'); } };
         window.trashAllLogs = () => { if (confirm('Clear all logs?')) { refs.logs.remove(); toast('Cleared'); } };
 
-        // ===== RENDERING FUNCTIONS (unchanged) =====
+        // ===== RENDERING FUNCTIONS =====
         function renderStorage(bookings) {
             const active = bookings.filter(b => b.status !== 'received' && b.status !== 'collected');
             document.getElementById('storageCount').textContent = active.length;
@@ -1828,7 +1871,7 @@
                 </div>`).join('') : '<div class="empty-state">Trash is empty</div>';
         }
 
-        // ===== HOUSE HUNTING FUNCTIONS WITH VIDEO SUPPORT =====
+        // ===== HOUSE HUNTING FUNCTIONS WITH OPTIMIZED VIDEO SUPPORT =====
         function loadHousingListings() {
             if (housingListener) {
                 refs.housing.off('value', housingListener);
@@ -1940,9 +1983,13 @@
             document.getElementById('houseStatus').value = 'available';
             pendingVideoFiles = [];
             existingVideosData = [];
+            isUploadingVideos = false;
             document.getElementById('existingVideosData').value = '';
             document.getElementById('videoUploadProgress').style.display = 'none';
             document.getElementById('videoUploadProgressBar').style.width = '0%';
+            document.getElementById('videoUploadStatus').style.display = 'none';
+            document.getElementById('houseSubmitBtn').disabled = false;
+            document.getElementById('houseSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Save Listing';
             renderVideoPreviews();
             openModal('addHouseModal');
         };
@@ -1970,27 +2017,34 @@
             
             pendingVideoFiles = [];
             existingVideosData = listing.videos || [];
+            isUploadingVideos = false;
             document.getElementById('existingVideosData').value = JSON.stringify(existingVideosData);
             document.getElementById('videoUploadProgress').style.display = 'none';
             document.getElementById('videoUploadProgressBar').style.width = '0%';
+            document.getElementById('videoUploadStatus').style.display = 'none';
+            document.getElementById('houseSubmitBtn').disabled = false;
+            document.getElementById('houseSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Save Listing';
             renderVideoPreviews();
             
             openModal('addHouseModal');
         };
 
+        // OPTIMIZED: Save listing first, then upload videos in background
         window.submitHouseListing = async function(e) {
             e.preventDefault();
             
             const submitBtn = document.getElementById('houseSubmitBtn');
+            const originalBtnText = submitBtn.innerHTML;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span> Saving...';
+            submitBtn.innerHTML = '<span class="spinner"></span> Saving listing...';
             
             try {
                 const editKey = document.getElementById('houseEditKey').value;
                 let listingKey = editKey;
                 
-                // If new listing, create it first to get the key
+                // Create listing first if new (this is fast)
                 if (!editKey) {
+                    submitBtn.innerHTML = '<span class="spinner"></span> Creating listing...';
                     const newRef = refs.housing.push({
                         timestamp: new Date().toISOString(),
                         createdBy: currentUser?.email,
@@ -2000,9 +2054,7 @@
                     listingKey = newRef.key;
                 }
                 
-                // Upload videos
-                const videos = await uploadVideos(listingKey);
-                
+                // Prepare house data with EXISTING videos (not pending ones)
                 const houseData = {
                     title: document.getElementById('houseTitle').value.trim(),
                     propertyType: document.getElementById('houseType').value,
@@ -2018,34 +2070,58 @@
                     leaseDuration: document.getElementById('houseLeaseDuration').value,
                     amenities: document.getElementById('houseAmenities').value.split(',').map(a => a.trim()).filter(Boolean),
                     status: document.getElementById('houseStatus').value,
-                    videos: videos,
+                    videos: existingVideosData, // Save with existing videos first
                     rating: editKey ? (allHousingListings.find(h => h._key === editKey)?.rating || 0) : 0,
                     updatedAt: new Date().toISOString()
                 };
                 
+                // Save the listing data IMMEDIATELY (fast operation)
                 await refs.housing.child(listingKey).update(houseData);
                 
-                // Clean up deleted videos from storage
+                // Close modal immediately after save
+                closeModal('addHouseModal');
+                toast('✅ Listing saved successfully!');
+                
+                // Clean up deleted videos from storage (for edits)
                 if (editKey) {
                     const oldListing = allHousingListings.find(h => h._key === editKey);
                     if (oldListing?.videos) {
-                        const newVideoPaths = videos.map(v => v.path);
+                        const newVideoPaths = existingVideosData.map(v => v.path).filter(Boolean);
                         for (const oldVideo of oldListing.videos) {
                             if (!newVideoPaths.includes(oldVideo.path)) {
-                                await deleteVideoFromStorage(oldVideo.path);
+                                deleteVideoFromStorage(oldVideo.path).catch(console.error);
                             }
                         }
                     }
                 }
                 
-                closeModal('addHouseModal');
-                toast('✅ Listing saved successfully!');
+                // Now upload new videos in BACKGROUND (non-blocking)
+                if (pendingVideoFiles.length > 0) {
+                    // Show a toast that videos are being uploaded
+                    toast('📹 Uploading videos in background...');
+                    
+                    // Upload videos asynchronously
+                    uploadVideosInBackground(listingKey).then(async (uploadedVideos) => {
+                        // Update listing with new video URLs
+                        await refs.housing.child(listingKey).update({
+                            videos: uploadedVideos
+                        });
+                        toast('✅ Videos uploaded successfully!');
+                    }).catch(error => {
+                        console.error('Background upload error:', error);
+                        toast('⚠️ Some videos failed to upload');
+                    });
+                }
+                
+                // Reset video state
+                pendingVideoFiles = [];
+                existingVideosData = [];
+                
             } catch (error) {
                 console.error('Save listing error:', error);
                 toast('❌ Error saving listing. Please try again.');
-            } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Listing';
+                submitBtn.innerHTML = originalBtnText;
             }
         };
 
@@ -2143,7 +2219,7 @@
             toast('🗑️ Listing deleted');
         };
 
-        // ===== PERFORMANCE, APPROVALS, DATA TABLES (unchanged) =====
+        // ===== PERFORMANCE, APPROVALS, DATA TABLES =====
         function calcPerf() {
             const p = {};
             staffList.forEach(s => { p[s.email] = { email: s.email, total: 0, accuracy: 100, streak: 0, rating: 'N/A', status: '⚪ Inactive' }; });
@@ -2320,6 +2396,7 @@
         window.removePendingVideo = removePendingVideo;
         window.openVideoPlayer = openVideoPlayer;
         window.closeVideoPlayer = closeVideoPlayer;
+        window.uploadVideosInBackground = uploadVideosInBackground;
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
