@@ -2421,6 +2421,13 @@
             console.log('PWA was installed successfully!');
             installBtn.style.display = 'none';
         });
+          if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw2.js')
+        .then(reg => console.log('Upstash Caching Proxy Active!', reg.scope))
+        .catch(err => console.error('Service Worker failed:', err));
+    });
+            }
     </script>
 </body>
 </html>
